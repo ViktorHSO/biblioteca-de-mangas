@@ -1,0 +1,19 @@
+@import "tailwindcss";
+
+@theme {
+  --color-base: #14121A;
+  --color-surface: #1F1B29;
+  --color-paper: #E8E4DC;
+  --color-accent: #D9A544;
+
+  --color-status-quero: #6C7A96;
+  --color-status-lendo: #D9A544;
+  --color-status-concluido: #6B8F71;
+
+  --font-display: "Shippori Mincho", serif;
+  --font-body: "Work Sans", sans-serif;
+}
+
+body {
+  @apply bg-base text-paper font-body;
+}
