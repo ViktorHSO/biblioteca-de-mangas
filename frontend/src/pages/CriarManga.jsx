@@ -29,8 +29,15 @@ export default function CriarManga() {
     try {
       await criarManga(form);
       navigate("/");
-    } catch {
-      setErro("Não foi possível salvar. Confere se o título foi preenchido e se a API está no ar.");
+    } catch (error) {
+      const status = error.response?.status;
+      if (status === 401) {
+        setErro("Cadastrar mangás exige login de administrador.");
+      } else if (status === 422) {
+        setErro("Algum campo está inválido. Confira o título e a URL da capa (precisa começar com http:// ou https://).");
+      } else {
+        setErro("Não foi possível salvar. Confira se a API está no ar.");
+      }
     } finally {
       setEnviando(false);
     }
