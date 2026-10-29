@@ -1,5 +1,6 @@
-from sqlalchemy import Column, Integer, String, Text
+from sqlalchemy import Boolean, Column, DateTime, Integer, String, Text, func
 from sqlalchemy.orm import relationship
+
 from app.database import Base
 
 
@@ -13,5 +14,15 @@ class Manga(Base):
     sinopse = Column(Text)
     status = Column(String(50), default="quero ler")
     capa_url = Column(String(500))
+    tipo = Column(String(20), nullable=False, default="mangá", server_default="mangá")
+    destaque = Column(Boolean, nullable=False, default=False, server_default="0")
+    visualizacoes = Column(Integer, nullable=False, default=0, server_default="0")
+    criado_em = Column(DateTime, nullable=False, server_default=func.now())
+    atualizado_em = Column(DateTime, nullable=False, server_default=func.now(), onupdate=func.now())
 
-    capitulos = relationship("Capitulo", back_populates="manga", cascade="all, delete-orphan")
+    capitulos = relationship(
+        "Capitulo",
+        back_populates="manga",
+        cascade="all, delete-orphan",
+        order_by="desc(Capitulo.numero)",
+    )

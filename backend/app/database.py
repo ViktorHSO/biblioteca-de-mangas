@@ -1,15 +1,16 @@
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
-import os
-from dotenv import load_dotenv
+from sqlalchemy.orm import declarative_base, sessionmaker
 
-load_dotenv()
+from app.core.config import configuracoes
 
-# Exemplo: mysql+pymysql://usuario:senha@localhost:3306/biblioteca_mangas
-DATABASE_URL = os.getenv("DATABASE_URL")
+# SQLite (usado nos testes) precisa dessa opção para funcionar com o servidor da API.
+argumentos_conexao = {"check_same_thread": False} if configuracoes.database_url.startswith("sqlite") else {}
 
-engine = create_engine(DATABASE_URL)
+engine = create_engine(
+    configuracoes.database_url,
+    pool_pre_ping=True,  # descarta conexões que o MySQL fechou por inatividade
+    connect_args=argumentos_conexao,
+)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
