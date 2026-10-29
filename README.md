@@ -28,9 +28,12 @@ O objetivo principal do projeto é praticar a construção de uma API REST compl
 ## 🚀 Funcionalidades
 
 - ✅ CRUD completo de mangás (criar, listar, buscar por ID, atualizar, deletar)
-- ✅ Cadastro de capítulos vinculados a um mangá (relacionamento 1:N)
-- ✅ Busca com filtros combináveis (título, autor, gênero, status)
+- ✅ Capítulos vinculados a um mangá (1:N) e páginas de imagem por capítulo, para o leitor
+- ✅ Busca com filtros combináveis (título, autor, gênero, status, tipo) e ordenação
 - ✅ Paginação de resultados
+- ✅ Ranking por visualizações, destaques, últimos capítulos e lista de gêneros
+- ✅ Login de administrador com JWT: leitura pública, escrita protegida
+- ✅ Testes automatizados com pytest
 - ✅ Documentação automática via Swagger
 
 ## 🛠️ Tecnologias utilizadas
@@ -41,6 +44,9 @@ O objetivo principal do projeto é praticar a construção de uma API REST compl
 - [SQLAlchemy](https://www.sqlalchemy.org/) (ORM)
 - [Pydantic](https://docs.pydantic.dev/) (validação de dados)
 - [MySQL](https://www.mysql.com/) (banco de dados)
+- [PyJWT](https://pyjwt.readthedocs.io/) + [bcrypt](https://pypi.org/project/bcrypt/) (autenticação)
+- [SlowAPI](https://slowapi.readthedocs.io/) (limite de requisições)
+- [pytest](https://docs.pytest.org/) (testes)
 
 **Front-end**
 - [React](https://react.dev/)
@@ -53,10 +59,15 @@ biblioteca-de-mangas/
 │   ├── app/
 │   │   ├── main.py          # ponto de entrada da API
 │   │   ├── database.py      # conexão com o MySQL
+│   │   ├── criar_admin.py   # script para criar o administrador
+│   │   ├── core/            # configurações, segurança (JWT/bcrypt) e rate limit
 │   │   ├── models/          # tabelas (SQLAlchemy)
 │   │   ├── schemas/         # validação de dados (Pydantic)
 │   │   ├── routers/         # rotas da API
 │   │   └── crud/            # funções de acesso ao banco
+│   ├── migrations/          # scripts SQL para atualizar um banco já existente
+│   ├── tests/               # testes automatizados (pytest)
+│   ├── .env.example         # modelo das variáveis de ambiente
 │   └── requirements.txt
 └── frontend/                # interface em React
 ```
@@ -85,10 +96,20 @@ Crie o banco no MySQL:
 CREATE DATABASE biblioteca_mangas;
 ```
 
-Configure o arquivo `.env` na pasta `backend/`:
+Copie `backend/.env.example` para `backend/.env` e preencha os valores. A `SECRET_KEY` pode ser gerada com:
 
+```bash
+python -c "import secrets; print(secrets.token_urlsafe(64))"
 ```
-DATABASE_URL=mysql+pymysql://usuario:senha@localhost:3306/biblioteca_mangas
+
+> A API não inicia sem uma `SECRET_KEY` segura. O arquivo `.env` fica fora do Git.
+
+Se o banco já existia antes desta versão, rode o script `backend/migrations/001_estilo_olympus_e_admin.sql` (ele só adiciona colunas e tabelas, sem apagar dados).
+
+Crie o administrador (a senha é digitada sem aparecer na tela):
+
+```bash
+python -m app.criar_admin
 ```
 
 Rode a API:
@@ -97,7 +118,16 @@ Rode a API:
 uvicorn app.main:app --reload
 ```
 
-A documentação interativa (Swagger) fica disponível em `http://127.0.0.1:8000/docs`.
+A documentação interativa (Swagger) fica disponível em `http://127.0.0.1:8000/docs`. Para testar as rotas protegidas por lá, faça login em `POST /auth/login`, copie o `access_token` e cole no botão **Authorize**.
+
+### Testes
+
+```bash
+pip install -r requirements-dev.txt
+pytest
+```
+
+Os testes usam um banco SQLite temporário, sem tocar no MySQL.
 
 ### Front-end
 
@@ -109,21 +139,46 @@ npm run dev
 
 ## 📌 Endpoints principais
 
+🔒 = exige login de administrador (`Authorization: Bearer <token>`)
+
 | Método | Rota | Descrição |
 |--------|------|-----------|
-| GET | `/mangas/` | Lista mangás (com filtros e paginação) |
-| GET | `/mangas/{id}` | Busca um mangá específico |
-| POST | `/mangas/` | Cadastra um novo mangá |
-| PUT | `/mangas/{id}` | Atualiza um mangá |
-| DELETE | `/mangas/{id}` | Remove um mangá |
-| GET | `/capitulos/manga/{manga_id}` | Lista capítulos de um mangá |
-| POST | `/capitulos/` | Cadastra um capítulo |
-| DELETE | `/capitulos/{id}` | Remove um capítulo |
+| POST | `/auth/login` | Login do administrador (retorna o token JWT) |
+| GET | `/auth/me` 🔒 | Dados do administrador logado |
+| GET | `/mangas/` | Lista mangás (filtros, ordenação e paginação) |
+| GET | `/mangas/ranking` | Mais vistos |
+| GET | `/mangas/destaques` | Mangás em destaque |
+| GET | `/mangas/generos` | Lista de gêneros cadastrados |
+| GET | `/mangas/{id}` | Mangá com a lista de capítulos |
+| POST | `/mangas/` 🔒 | Cadastra um mangá |
+| PUT | `/mangas/{id}` 🔒 | Atualiza um mangá |
+| DELETE | `/mangas/{id}` 🔒 | Remove um mangá (e seus capítulos) |
+| POST | `/mangas/{id}/visualizar` | Conta uma visualização |
+| GET | `/capitulos/recentes` | Últimos capítulos lançados |
+| GET | `/capitulos/manga/{manga_id}` | Capítulos de um mangá |
+| GET | `/capitulos/{id}` | Capítulo com páginas e navegação (anterior/próximo) |
+| POST | `/capitulos/` 🔒 | Cadastra um capítulo |
+| PUT | `/capitulos/{id}` 🔒 | Atualiza um capítulo |
+| PUT | `/capitulos/{id}/paginas` 🔒 | Define as páginas (URLs das imagens) |
+| DELETE | `/capitulos/{id}` 🔒 | Remove um capítulo |
+| POST | `/capitulos/{id}/visualizar` | Conta uma leitura |
+
+## 🔐 Segurança
+
+- Senhas guardadas apenas como hash **bcrypt**; login com token **JWT** assinado e com expiração.
+- Rotas de escrita protegidas; leitura pública.
+- Validação de todos os dados de entrada (tamanhos, valores permitidos, campos extras recusados).
+- URLs de imagens aceitas só com `http`/`https`, bloqueando `javascript:` e `data:` (XSS).
+- Consultas via ORM (sem SQL montado à mão) e curingas `%`/`_` escapados nas buscas.
+- Limite de tentativas de login e de contagem de visualizações por IP.
+- CORS restrito às origens configuradas e cabeçalhos de segurança nas respostas.
+- Erros internos não expõem detalhes do servidor.
+- Segredos só em variáveis de ambiente; dependências com versões fixadas e auditadas com `pip-audit` e `npm audit`.
 
 ## 🗺️ Próximos passos
 
-- [ ] Interface completa em React
-- [ ] Autenticação de usuário
+- [ ] Interface completa em React (estilo site de leitura, com leitor de capítulos)
+- [x] Autenticação de administrador
 - [ ] Upload de imagem de capa
 - [ ] Deploy da API
 
