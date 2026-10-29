@@ -13,3 +13,5 @@ frontend/.env
 # Geral
 .vscode/
 .DS_Store
+# Testes
+.pytest_cache/
