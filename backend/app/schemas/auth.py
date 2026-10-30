@@ -1,6 +1,6 @@
-from datetime import datetime
-
 from pydantic import BaseModel, ConfigDict, Field
+
+from app.schemas.comum import DataHoraUTC
 
 
 class LoginRequest(BaseModel):
@@ -21,4 +21,4 @@ class UsuarioResponse(BaseModel):
 
     id: int
     usuario: str
-    criado_em: datetime
+    criado_em: DataHoraUTC

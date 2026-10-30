@@ -1,4 +1,5 @@
 """Tipos reutilizados pelos schemas, com as regras de validação em um só lugar."""
+from datetime import datetime, timezone
 from typing import Annotated, Literal
 from urllib.parse import urlparse
 
@@ -33,6 +34,14 @@ def _validar_url(valor: str | None) -> str | None:
         raise ValueError("A URL não pode conter espaços.")
     return valor
 
+
+def _marcar_utc(valor: datetime) -> datetime:
+    return valor.replace(tzinfo=timezone.utc) if valor.tzinfo is None else valor
+
+
+# O banco guarda datas sem fuso (sempre em UTC). Marcar o fuso na resposta evita que
+# o navegador interprete a data como horário local.
+DataHoraUTC = Annotated[datetime, AfterValidator(_marcar_utc)]
 
 UrlImagem = Annotated[
     Annotated[str, Field(max_length=TAMANHO_MAXIMO_URL)] | None,

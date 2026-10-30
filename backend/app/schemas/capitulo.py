@@ -1,8 +1,8 @@
-from datetime import date, datetime
+from datetime import date
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.schemas.comum import UrlImagemObrigatoria, texto_opcional
+from app.schemas.comum import DataHoraUTC, UrlImagemObrigatoria, texto_opcional
 
 MAXIMO_PAGINAS_POR_CAPITULO = 300
 
@@ -57,7 +57,7 @@ class CapituloResumo(BaseModel):
     titulo: str | None = None
     data_lancamento: date | None = None
     visualizacoes: int
-    criado_em: datetime
+    criado_em: DataHoraUTC
 
 
 class CapituloResponse(CapituloResumo):
