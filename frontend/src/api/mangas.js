@@ -1,23 +1,33 @@
-import axios from "axios";
+import api from "./client";
 
-const api = axios.create({
-  baseURL: "http://127.0.0.1:8000",
-});
-
-export async function listarMangas({ skip = 0, limit = 20, titulo, autor, genero, status } = {}) {
+export async function listarMangas({ skip = 0, limit = 20, ...filtros } = {}) {
   const params = { skip, limit };
-  if (titulo) params.titulo = titulo;
-  if (autor) params.autor = autor;
-  if (genero) params.genero = genero;
-  if (status) params.status = status;
-
-  const response = await api.get("/mangas/", { params });
-  return response.data; // { total, itens }
+  for (const [chave, valor] of Object.entries(filtros)) {
+    if (valor) params[chave] = valor;
+  }
+  const { data } = await api.get("/mangas/", { params });
+  return data;
 }
 
-export default api;
+export async function buscarManga(id) {
+  const { data } = await api.get(`/mangas/${id}`);
+  return data;
+}
 
 export async function criarManga(dados) {
-  const response = await api.post("/mangas/", dados);
-  return response.data;
+  const { data } = await api.post("/mangas/", dados);
+  return data;
+}
+
+export async function atualizarManga(id, dados) {
+  const { data } = await api.put(`/mangas/${id}`, dados);
+  return data;
+}
+
+export async function excluirManga(id) {
+  await api.delete(`/mangas/${id}`);
+}
+
+export async function registrarVisualizacao(id) {
+  await api.post(`/mangas/${id}/visualizar`);
 }

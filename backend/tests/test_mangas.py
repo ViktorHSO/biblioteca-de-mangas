@@ -118,3 +118,9 @@ def test_cors_so_libera_origem_configurada(client):
     estranha = client.get("/", headers={"Origin": "https://site-malicioso.com"})
     assert permitida.headers.get("access-control-allow-origin") == "http://localhost:5173"
     assert "access-control-allow-origin" not in estranha.headers
+
+
+def test_datas_saem_com_fuso_utc(client, criar_manga):
+    manga = criar_manga()
+    assert manga["criado_em"].endswith(("Z", "+00:00"))
+    assert manga["atualizado_em"].endswith(("Z", "+00:00"))
