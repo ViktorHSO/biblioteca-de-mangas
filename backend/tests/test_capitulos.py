@@ -98,3 +98,43 @@ def test_excluir_manga_apaga_capitulos_e_paginas(client, auth, criar_manga, cria
     client.put(f"/capitulos/{cap['id']}/paginas", json={"urls": ["https://a.com/1.jpg"]}, headers=auth)
     client.delete(f"/mangas/{manga['id']}", headers=auth)
     assert client.get(f"/capitulos/{cap['id']}").status_code == 404
+
+
+def test_criar_capitulo_ja_com_paginas(client, auth, criar_manga):
+    manga = criar_manga()
+    urls = ["https://exemplo.com/1.jpg", "https://exemplo.com/2.jpg"]
+    resposta = client.post(
+        "/capitulos/", json={"manga_id": manga["id"], "numero": 1, "paginas": urls}, headers=auth
+    )
+    assert resposta.status_code == 201
+    leitura = client.get(f"/capitulos/{resposta.json()['id']}").json()
+    assert [p["imagem_url"] for p in leitura["paginas"]] == urls
+
+
+def test_pagina_invalida_nao_cria_o_capitulo(client, auth, criar_manga):
+    manga = criar_manga()
+    corpo = {"manga_id": manga["id"], "numero": 1, "paginas": ["https://ok.com/1.jpg", "javascript:alert(1)"]}
+    resposta = client.post("/capitulos/", json=corpo, headers=auth)
+    assert resposta.status_code == 422
+    assert resposta.json()["detail"][0]["loc"] == ["body", "paginas", 1]
+    assert client.get(f"/capitulos/manga/{manga['id']}").json() == []
+
+
+def test_editar_capitulo_com_e_sem_paginas(client, auth, criar_manga, criar_capitulo):
+    manga = criar_manga()
+    cap = criar_capitulo(manga["id"], 1, paginas=["https://a.com/1.jpg"])
+
+    client.put(f"/capitulos/{cap['id']}", json={"numero": 1, "titulo": "Novo título"}, headers=auth)
+    assert len(client.get(f"/capitulos/{cap['id']}").json()["paginas"]) == 1
+
+    novas = ["https://b.com/1.jpg", "https://b.com/2.jpg", "https://b.com/3.jpg"]
+    client.put(f"/capitulos/{cap['id']}", json={"numero": 1, "paginas": novas}, headers=auth)
+    leitura = client.get(f"/capitulos/{cap['id']}").json()
+    assert leitura["titulo"] is None
+    assert [p["imagem_url"] for p in leitura["paginas"]] == novas
+
+
+def test_limite_de_paginas_no_cadastro(client, auth, criar_manga):
+    manga = criar_manga()
+    corpo = {"manga_id": manga["id"], "numero": 1, "paginas": ["https://a.com/p.jpg"] * 301}
+    assert client.post("/capitulos/", json=corpo, headers=auth).status_code == 422

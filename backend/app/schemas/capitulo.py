@@ -1,10 +1,13 @@
 from datetime import date
+from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.schemas.comum import DataHoraUTC, UrlImagemObrigatoria, texto_opcional
 
 MAXIMO_PAGINAS_POR_CAPITULO = 300
+
+ListaPaginas = Annotated[list[UrlImagemObrigatoria], Field(max_length=MAXIMO_PAGINAS_POR_CAPITULO)]
 
 
 class CapituloBase(BaseModel):
@@ -17,10 +20,15 @@ class CapituloBase(BaseModel):
 
 class CapituloCreate(CapituloBase):
     manga_id: int = Field(gt=0)
+    paginas: ListaPaginas = Field(
+        default_factory=list, description="URLs das páginas, na ordem de leitura (opcional)"
+    )
 
 
 class CapituloUpdate(CapituloBase):
-    pass
+    paginas: ListaPaginas | None = Field(
+        default=None, description="Se enviada, substitui todas as páginas; se omitida, mantém as atuais"
+    )
 
 
 class PaginasUpdate(BaseModel):

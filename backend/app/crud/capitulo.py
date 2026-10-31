@@ -54,10 +54,18 @@ def _marcar_manga_atualizado(db: Session, manga_id: int):
     db.execute(update(Manga).where(Manga.id == manga_id).values(atualizado_em=func.now()))
 
 
+def _definir_paginas(db: Session, capitulo: Capitulo, urls: list[str]):
+    capitulo.paginas.clear()
+    db.flush()  # remove as antigas antes de inserir as novas (a ordem é única por capítulo)
+    capitulo.paginas.extend(Pagina(ordem=i, imagem_url=url) for i, url in enumerate(urls, start=1))
+
+
 def create_capitulo(db: Session, capitulo: CapituloCreate):
-    novo_capitulo = Capitulo(**capitulo.model_dump())
+    # Capítulo e páginas são gravados no mesmo commit: ou entra tudo, ou nada.
+    novo_capitulo = Capitulo(**capitulo.model_dump(exclude={"paginas"}))
     db.add(novo_capitulo)
     db.flush()
+    _definir_paginas(db, novo_capitulo, capitulo.paginas)
     _marcar_manga_atualizado(db, capitulo.manga_id)
     db.commit()
     db.refresh(novo_capitulo)
@@ -65,17 +73,18 @@ def create_capitulo(db: Session, capitulo: CapituloCreate):
 
 
 def update_capitulo(db: Session, capitulo: Capitulo, dados: CapituloUpdate):
-    for campo, valor in dados.model_dump().items():
+    for campo, valor in dados.model_dump(exclude={"paginas"}).items():
         setattr(capitulo, campo, valor)
+    if dados.paginas is not None:
+        _definir_paginas(db, capitulo, dados.paginas)
+    _marcar_manga_atualizado(db, capitulo.manga_id)
     db.commit()
     db.refresh(capitulo)
     return capitulo
 
 
 def substituir_paginas(db: Session, capitulo: Capitulo, urls: list[str]):
-    capitulo.paginas.clear()
-    db.flush()  # remove as antigas antes de inserir as novas (ordem é única por capítulo)
-    capitulo.paginas.extend(Pagina(ordem=i, imagem_url=url) for i, url in enumerate(urls, start=1))
+    _definir_paginas(db, capitulo, urls)
     _marcar_manga_atualizado(db, capitulo.manga_id)
     db.commit()
     db.refresh(capitulo)
