@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { errosDeCampo } from "../utils/erros";
+import { classeCampo, ehUrlHttp } from "../utils/formulario";
+import Campo from "./Campo";
 
 const STATUS = ["quero ler", "lendo", "concluído"];
 const TIPOS = ["mangá", "manhwa", "manhua", "novel"];
@@ -14,24 +16,6 @@ const VAZIO = {
   capa_url: "",
   destaque: false,
 };
-
-function ehUrlHttp(texto) {
-  return /^https?:\/\/\S+$/i.test(texto ?? "");
-}
-
-const classeCampo =
-  "w-full rounded-md border border-black/60 bg-surface px-3 py-2 text-paper focus:outline-none focus:ring-2 focus:ring-accent";
-
-function Campo({ rotulo, erro, dica, children }) {
-  return (
-    <label className="block">
-      <span className="mb-1 block text-sm text-paper/80">{rotulo}</span>
-      {children}
-      {dica && !erro && <span className="mt-1 block text-xs text-paper/40">{dica}</span>}
-      {erro && <span className="mt-1 block text-xs text-red-400">{erro}</span>}
-    </label>
-  );
-}
 
 export default function MangaForm({ valoresIniciais, textoBotao, onSalvar }) {
   const [form, setForm] = useState(() => ({ ...VAZIO, ...valoresIniciais }));
