@@ -5,6 +5,7 @@ import CriarManga from "./pages/CriarManga";
 import EditarCapitulo from "./pages/EditarCapitulo";
 import EditarManga from "./pages/EditarManga";
 import Home from "./pages/Home";
+import Leitor from "./pages/Leitor";
 import Login from "./pages/Login";
 import MangaDetalhe from "./pages/MangaDetalhe";
 import NaoEncontrado from "./pages/NaoEncontrado";
@@ -20,6 +21,7 @@ export default function App() {
         <Route path="/novo" element={<RotaAdmin><CriarManga /></RotaAdmin>} />
         <Route path="/manga/:id/editar" element={<RotaAdmin><EditarManga /></RotaAdmin>} />
         <Route path="/manga/:id/capitulos/novo" element={<RotaAdmin><NovoCapitulo /></RotaAdmin>} />
+        <Route path="/capitulo/:id" element={<Leitor />} />
         <Route path="/capitulo/:id/editar" element={<RotaAdmin><EditarCapitulo /></RotaAdmin>} />
         <Route path="*" element={<NaoEncontrado />} />
       </Route>

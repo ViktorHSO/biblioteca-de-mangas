@@ -5,6 +5,7 @@ import ConfirmDialog from "../components/ConfirmDialog";
 import ListaCapitulos from "../components/ListaCapitulos";
 import StatusBadge from "../components/StatusBadge";
 import { useAuth } from "../context/useAuth";
+import { lerProgresso } from "../utils/progresso";
 import NaoEncontrado from "./NaoEncontrado";
 
 function separarGeneros(genero) {
@@ -55,6 +56,8 @@ export default function MangaDetalhe() {
   const capitulos = manga.capitulos;
   const ultimo = capitulos[0];
   const primeiro = capitulos[capitulos.length - 1];
+  const progresso = lerProgresso(manga.id);
+  const continuar = progresso && capitulos.find((capitulo) => capitulo.id === progresso.capituloId);
 
   return (
     <article className="space-y-10">
@@ -91,13 +94,22 @@ export default function MangaDetalhe() {
           {manga.sinopse && <p className="max-w-2xl whitespace-pre-line text-paper/80">{manga.sinopse}</p>}
 
           <div className="flex flex-wrap gap-3 pt-2">
-            {primeiro && (
+            {continuar ? (
               <Link
-                to={`/capitulo/${primeiro.id}`}
+                to={`/capitulo/${continuar.id}`}
                 className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-base transition-opacity hover:opacity-90"
               >
-                Ler do início
+                Continuar (cap. {continuar.numero})
               </Link>
+            ) : (
+              primeiro && (
+                <Link
+                  to={`/capitulo/${primeiro.id}`}
+                  className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-base transition-opacity hover:opacity-90"
+                >
+                  Ler do início
+                </Link>
+              )
             )}
             {ultimo && ultimo !== primeiro && (
               <Link
@@ -139,7 +151,7 @@ export default function MangaDetalhe() {
         <h2 className="mb-4 font-display text-2xl text-paper">
           Capítulos <span className="text-paper/40">({capitulos.length})</span>
         </h2>
-        <ListaCapitulos capitulos={capitulos} />
+        <ListaCapitulos capitulos={capitulos} capituloAtualId={continuar?.id} />
       </section>
 
       <ConfirmDialog

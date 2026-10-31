@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { formatarData, tempoRelativo } from "../utils/tempo";
 
-export default function ListaCapitulos({ capitulos }) {
+export default function ListaCapitulos({ capitulos, capituloAtualId }) {
   if (capitulos.length === 0) {
     return <p className="text-sm text-paper/50">Nenhum capítulo cadastrado ainda.</p>;
   }
@@ -16,6 +16,11 @@ export default function ListaCapitulos({ capitulos }) {
           >
             <span className="min-w-0">
               <span className="font-semibold text-paper">Capítulo {capitulo.numero}</span>
+              {capitulo.id === capituloAtualId && (
+                <span className="ml-2 rounded-sm bg-accent/20 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-accent">
+                  Lendo
+                </span>
+              )}
               {capitulo.titulo && <span className="ml-2 truncate text-paper/60">— {capitulo.titulo}</span>}
             </span>
             <span className="shrink-0 text-xs text-paper/40">
