@@ -110,6 +110,12 @@ export default function MangaDetalhe() {
             {logado && (
               <>
                 <Link
+                  to={`/manga/${id}/capitulos/novo`}
+                  className="rounded-md border border-white/10 px-4 py-2 text-sm text-paper/80 transition-colors hover:text-paper"
+                >
+                  + Capítulo
+                </Link>
+                <Link
                   to={`/manga/${id}/editar`}
                   className="rounded-md border border-white/10 px-4 py-2 text-sm text-paper/80 transition-colors hover:text-paper"
                 >
