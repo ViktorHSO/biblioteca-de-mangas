@@ -24,6 +24,11 @@ export async function listarRanking(limit = 10) {
   return data;
 }
 
+export async function listarGeneros() {
+  const { data } = await api.get("/mangas/generos");
+  return data;
+}
+
 export async function buscarManga(id) {
   const { data } = await api.get(`/mangas/${id}`);
   return data;

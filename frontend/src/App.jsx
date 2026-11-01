@@ -10,12 +10,14 @@ import Login from "./pages/Login";
 import MangaDetalhe from "./pages/MangaDetalhe";
 import NaoEncontrado from "./pages/NaoEncontrado";
 import NovoCapitulo from "./pages/NovoCapitulo";
+import Series from "./pages/Series";
 
 export default function App() {
   return (
     <Routes>
       <Route element={<Layout />}>
         <Route path="/" element={<Home />} />
+        <Route path="/series" element={<Series />} />
         <Route path="/login" element={<Login />} />
         <Route path="/manga/:id" element={<MangaDetalhe />} />
         <Route path="/novo" element={<RotaAdmin><CriarManga /></RotaAdmin>} />
