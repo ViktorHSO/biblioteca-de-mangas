@@ -1,10 +1,8 @@
 import { useState } from "react";
 import { errosDeCampo } from "../utils/erros";
 import { classeCampo, ehUrlHttp } from "../utils/formulario";
+import { STATUS, TIPOS } from "../utils/opcoes";
 import Campo from "./Campo";
-
-const STATUS = ["quero ler", "lendo", "concluído"];
-const TIPOS = ["mangá", "manhwa", "manhua", "novel"];
 
 const VAZIO = {
   titulo: "",

@@ -9,6 +9,26 @@ export async function listarMangas({ skip = 0, limit = 20, ...filtros } = {}) {
   return data;
 }
 
+export async function listarDestaques() {
+  const { data } = await api.get("/mangas/destaques");
+  return data;
+}
+
+export async function listarAtualizados(limit = 12) {
+  const { data } = await api.get("/mangas/atualizados", { params: { limit } });
+  return data;
+}
+
+export async function listarRanking(limit = 10) {
+  const { data } = await api.get("/mangas/ranking", { params: { limit } });
+  return data;
+}
+
+export async function listarGeneros() {
+  const { data } = await api.get("/mangas/generos");
+  return data;
+}
+
 export async function buscarManga(id) {
   const { data } = await api.get(`/mangas/${id}`);
   return data;

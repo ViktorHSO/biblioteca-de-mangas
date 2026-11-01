@@ -76,6 +76,11 @@ class CapituloRecente(CapituloResponse):
     manga: MangaResumo
 
 
+class CapituloRecentePaginado(BaseModel):
+    total: int
+    itens: list[CapituloRecente]
+
+
 class CapituloLeitura(CapituloResponse):
     """Tudo que o leitor precisa: páginas, dados do mangá e navegação."""
 

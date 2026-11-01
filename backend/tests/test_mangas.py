@@ -101,6 +101,22 @@ def test_destaques_sem_marcados_usam_os_que_tem_capa(client, criar_manga):
     assert [m["titulo"] for m in client.get("/mangas/destaques").json()] == ["Com capa"]
 
 
+def test_atualizados_ordenam_pelo_capitulo_mais_novo(client, criar_manga, criar_capitulo):
+    a = criar_manga(titulo="A")
+    b = criar_manga(titulo="B")
+    criar_manga(titulo="Sem capítulos")
+    for numero in (1, 2, 3):
+        criar_capitulo(a["id"], numero)
+    criar_capitulo(b["id"], 1)
+    criar_capitulo(a["id"], 4)
+
+    atualizados = client.get("/mangas/atualizados").json()
+    assert [m["titulo"] for m in atualizados] == ["A", "B"]
+    assert [c["numero"] for c in atualizados[0]["ultimos_capitulos"]] == [4, 3]
+    assert [c["numero"] for c in atualizados[1]["ultimos_capitulos"]] == [1]
+    assert client.get("/mangas/atualizados", params={"limit": 25}).status_code == 422
+
+
 def test_generos_sao_separados_e_unicos(client, criar_manga):
     criar_manga(titulo="A", genero="Ação, Aventura")
     criar_manga(titulo="B", genero="aventura, Drama")

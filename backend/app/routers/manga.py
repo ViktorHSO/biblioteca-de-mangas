@@ -5,10 +5,12 @@ from sqlalchemy.orm import Session
 
 from app.core.dependencias import exigir_admin
 from app.core.limitador import limitador
+from app.crud import capitulo as crud_capitulo
 from app.crud import manga as crud_manga
 from app.database import get_db
 from app.schemas.comum import StatusLeitura, TipoObra
 from app.schemas.manga import (
+    MangaAtualizado,
     MangaCreate,
     MangaDetalhe,
     MangaPaginado,
@@ -29,7 +31,7 @@ def _buscar_ou_404(db: Session, manga_id: int):
     return manga
 
 
-# As rotas fixas (/ranking, /destaques, /generos) vêm antes de /{manga_id}.
+# As rotas fixas (/ranking, /destaques, /atualizados, /generos) vêm antes de /{manga_id}.
 
 @router.get("/", response_model=MangaPaginado)
 def listar_mangas(
@@ -59,6 +61,18 @@ def ranking(limit: int = Query(default=10, ge=1, le=50), db: Session = Depends(g
 @router.get("/destaques", response_model=list[MangaResponse])
 def destaques(limit: int = Query(default=5, ge=1, le=20), db: Session = Depends(get_db)):
     return crud_manga.get_destaques(db, limit)
+
+
+@router.get("/atualizados", response_model=list[MangaAtualizado])
+def atualizados(limit: int = Query(default=12, ge=1, le=24), db: Session = Depends(get_db)):
+    """Mangás com capítulo novo, cada um com os 2 últimos capítulos (seção "Novos capítulos" da Home)."""
+    return [
+        MangaAtualizado(
+            **MangaResponse.model_validate(manga).model_dump(),
+            ultimos_capitulos=crud_capitulo.get_ultimos_do_manga(db, manga.id),
+        )
+        for manga in crud_manga.get_atualizados(db, limit)
+    ]
 
 
 @router.get("/generos", response_model=list[str])

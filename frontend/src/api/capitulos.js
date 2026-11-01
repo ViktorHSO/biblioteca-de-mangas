@@ -1,5 +1,10 @@
 import api from "./client";
 
+export async function listarLancamentos({ skip = 0, limit = 30 } = {}) {
+  const { data } = await api.get("/capitulos/recentes", { params: { skip, limit } });
+  return data;
+}
+
 export async function buscarCapitulo(id) {
   const { data } = await api.get(`/capitulos/${id}`);
   return data;

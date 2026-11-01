@@ -15,11 +15,24 @@ def get_capitulo(db: Session, capitulo_id: int):
     return db.get(Capitulo, capitulo_id)
 
 
-def get_capitulos_recentes(db: Session, limit: int = 20):
-    return (
+def get_capitulos_recentes(db: Session, skip: int = 0, limit: int = 20):
+    total = db.query(func.count(Capitulo.id)).scalar()
+    capitulos = (
         db.query(Capitulo)
         .options(joinedload(Capitulo.manga))
         .order_by(Capitulo.criado_em.desc(), Capitulo.id.desc())
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
+    return capitulos, total
+
+
+def get_ultimos_do_manga(db: Session, manga_id: int, limit: int = 2):
+    return (
+        db.query(Capitulo)
+        .filter(Capitulo.manga_id == manga_id)
+        .order_by(Capitulo.numero.desc())
         .limit(limit)
         .all()
     )
