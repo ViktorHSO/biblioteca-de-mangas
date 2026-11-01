@@ -1,9 +1,10 @@
 import unicodedata
 
-from sqlalchemy import update
+from sqlalchemy import func, update
 from sqlalchemy.orm import Session
 
 from app.crud.utils import padrao_like
+from app.models.capitulo import Capitulo
 from app.models.manga import Manga
 from app.schemas.manga import MangaCreate
 
@@ -67,6 +68,26 @@ def get_destaques(db: Session, limit: int = 5):
         db.query(Manga)
         .filter(Manga.capa_url.is_not(None))
         .order_by(Manga.visualizacoes.desc(), Manga.atualizado_em.desc())
+        .limit(limit)
+        .all()
+    )
+
+
+def get_atualizados(db: Session, limit: int = 12):
+    """Mangás ordenados pelo capítulo cadastrado mais recentemente (só os que têm capítulos)."""
+    ultimo = (
+        db.query(
+            Capitulo.manga_id,
+            func.max(Capitulo.criado_em).label("ultimo_em"),
+            func.max(Capitulo.id).label("ultimo_id"),
+        )
+        .group_by(Capitulo.manga_id)
+        .subquery()
+    )
+    return (
+        db.query(Manga)
+        .join(ultimo, ultimo.c.manga_id == Manga.id)
+        .order_by(ultimo.c.ultimo_em.desc(), ultimo.c.ultimo_id.desc())
         .limit(limit)
         .all()
     )

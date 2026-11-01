@@ -9,7 +9,7 @@ from app.database import get_db
 from app.schemas.capitulo import (
     CapituloCreate,
     CapituloLeitura,
-    CapituloRecente,
+    CapituloRecentePaginado,
     CapituloResponse,
     CapituloUpdate,
     PaginaResponse,
@@ -32,10 +32,15 @@ def _garantir_numero_livre(db: Session, manga_id: int, numero: int, ignorar_id: 
         raise HTTPException(status_code=409, detail=f"Já existe o capítulo {numero} neste mangá")
 
 
-@router.get("/recentes", response_model=list[CapituloRecente])
-def capitulos_recentes(limit: int = Query(default=20, ge=1, le=50), db: Session = Depends(get_db)):
-    """Últimos capítulos cadastrados, com os dados do mangá (seção "Novos capítulos")."""
-    return crud_capitulo.get_capitulos_recentes(db, limit)
+@router.get("/recentes", response_model=CapituloRecentePaginado)
+def capitulos_recentes(
+    skip: int = Query(default=0, ge=0),
+    limit: int = Query(default=20, ge=1, le=50),
+    db: Session = Depends(get_db),
+):
+    """Últimos capítulos cadastrados, com os dados do mangá (página de lançamentos)."""
+    capitulos, total = crud_capitulo.get_capitulos_recentes(db, skip, limit)
+    return {"total": total, "itens": capitulos}
 
 
 @router.get("/manga/{manga_id}", response_model=list[CapituloResponse])

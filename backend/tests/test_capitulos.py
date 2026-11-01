@@ -69,7 +69,19 @@ def test_capitulos_recentes_trazem_o_manga(client, criar_manga, criar_capitulo):
     criar_capitulo(a["id"], 1)
     criar_capitulo(b["id"], 1)
     recentes = client.get("/capitulos/recentes").json()
-    assert [c["manga"]["titulo"] for c in recentes] == ["B", "A"]
+    assert recentes["total"] == 2
+    assert [c["manga"]["titulo"] for c in recentes["itens"]] == ["B", "A"]
+
+
+def test_capitulos_recentes_sao_paginados(client, criar_manga, criar_capitulo):
+    manga = criar_manga()
+    for numero in range(1, 6):
+        criar_capitulo(manga["id"], numero)
+    pagina = client.get("/capitulos/recentes", params={"skip": 2, "limit": 2}).json()
+    assert pagina["total"] == 5
+    assert [c["numero"] for c in pagina["itens"]] == [3, 2]
+    assert client.get("/capitulos/recentes", params={"limit": 51}).status_code == 422
+    assert client.get("/capitulos/recentes", params={"skip": -1}).status_code == 422
 
 
 def test_atualizar_e_deletar_capitulo(client, auth, criar_manga, criar_capitulo):

@@ -51,6 +51,12 @@ class MangaPaginado(BaseModel):
     itens: list[MangaResponse]
 
 
+class MangaAtualizado(MangaResponse):
+    """Mangá com os capítulos mais recentes, para a seção "Novos capítulos"."""
+
+    ultimos_capitulos: list[CapituloResumo]
+
+
 class MangaRanking(MangaResponse):
     posicao: int
 
