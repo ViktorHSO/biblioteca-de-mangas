@@ -93,7 +93,7 @@ function LeitorCapitulo({ id }) {
         )}
       </header>
 
-      <div className="sticky top-[57px] z-30 -mx-4 mb-6 border-y border-white/5 bg-base/95 px-4 py-2 backdrop-blur">
+      <div className="z-30 md:sticky md:top-[57px] -mx-4 mb-6 border-y border-white/5 bg-base/95 px-4 py-2 backdrop-blur">
         <NavegacaoCapitulos capitulo={capitulo} />
       </div>
 

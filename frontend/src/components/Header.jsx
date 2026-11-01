@@ -1,6 +1,13 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
 
+const LINKS = [
+  { para: "/", texto: "Início" },
+  { para: "/series", texto: "Séries" },
+  { para: "/ranking", texto: "Ranking" },
+  { para: "/capitulos", texto: "Lançamentos" },
+];
+
 function classeDoLink({ isActive }) {
   return `text-sm transition-colors ${isActive ? "text-accent" : "text-paper/70 hover:text-paper"}`;
 }
@@ -16,17 +23,21 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-white/5 bg-base/95 backdrop-blur">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 md:px-6">
-        <div className="flex items-center gap-8">
-          <Link to="/" className="font-display text-xl text-paper">
-            Biblioteca <span className="text-accent">de Mangás</span>
-          </Link>
-          <nav className="flex items-center gap-5">
-            <NavLink to="/" end className={classeDoLink}>
-              Início
+      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-8 gap-y-2 px-4 py-3 md:px-6">
+        <Link to="/" className="font-display text-xl text-paper">
+          Biblioteca <span className="text-accent">de Mangás</span>
+        </Link>
+        {/* Em telas pequenas o menu desce para uma segunda linha, com rolagem lateral se precisar. */}
+        <nav
+          className="order-last flex w-full items-center gap-5 overflow-x-auto md:order-none md:w-auto md:flex-1"
+          aria-label="Principal"
+        >
+          {LINKS.map((link) => (
+            <NavLink key={link.para} to={link.para} end={link.para === "/"} className={classeDoLink}>
+              {link.texto}
             </NavLink>
-          </nav>
-        </div>
+          ))}
+        </nav>
 
         <div className="flex items-center gap-3">
           {logado ? (
