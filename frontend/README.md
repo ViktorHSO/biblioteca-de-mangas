@@ -1,16 +1,36 @@
-# React + Vite
+# Biblioteca de Mangás — front-end
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Interface em React do projeto. A documentação completa (funcionalidades, como rodar a API e o banco, segurança) está no [README principal](../README.md).
 
-Currently, two official plugins are available:
+## Rodando
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+```bash
+npm install
+copy .env.example .env      # Windows (Mac/Linux: cp .env.example .env)
+npm run dev                 # http://localhost:5173
+```
 
-## React Compiler
+| Variável | Para que serve | Padrão |
+|---|---|---|
+| `VITE_API_URL` | Endereço da API (back-end) | `http://127.0.0.1:8000` |
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Scripts
 
-## Expanding the ESLint configuration
+| Comando | O que faz |
+|---|---|
+| `npm run dev` | Servidor de desenvolvimento com recarga automática |
+| `npm run build` | Gera a versão de produção em `dist/` |
+| `npm run preview` | Serve a pasta `dist/` para conferir o build |
+| `npm run lint` | Verifica o código com o ESLint |
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Organização
+
+```
+src/
+├── api/         chamadas à API (axios com token e tratamento de sessão expirada)
+├── components/  peças reaproveitáveis (cards, formulários, busca rápida, paginação...)
+├── context/     login do administrador e avisos (toasts)
+├── hooks/       useCarregamento e atalho Ctrl+K
+├── pages/       uma página por rota
+└── utils/       datas, números, URL e opções compartilhadas
+```
