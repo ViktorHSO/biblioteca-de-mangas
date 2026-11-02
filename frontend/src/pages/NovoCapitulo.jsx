@@ -3,11 +3,14 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { criarCapitulo } from "../api/capitulos";
 import { buscarManga } from "../api/mangas";
 import CapituloForm from "../components/CapituloForm";
+import { FormularioEsqueleto } from "../components/Esqueleto";
+import { useToast } from "../context/useToast";
 import NaoEncontrado from "./NaoEncontrado";
 
 export default function NovoCapitulo() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { avisar } = useToast();
   const [manga, setManga] = useState(null);
   const [erro, setErro] = useState(null);
 
@@ -19,12 +22,13 @@ export default function NovoCapitulo() {
 
   async function salvar(dados) {
     const capitulo = await criarCapitulo({ ...dados, manga_id: Number(id) });
+    avisar(`Capítulo ${capitulo.numero} cadastrado.`);
     navigate(`/capitulo/${capitulo.id}`);
   }
 
   if (erro === 404) return <NaoEncontrado mensagem="Mangá não encontrado." />;
   if (erro) return <p className="text-red-400">Não foi possível carregar o mangá.</p>;
-  if (!manga) return <p className="text-paper/60">Carregando...</p>;
+  if (!manga) return <FormularioEsqueleto />;
 
   // Sugere o número seguinte ao maior já cadastrado (a lista vem do mais novo ao mais antigo).
   const proximoNumero = (manga.capitulos[0]?.numero ?? 0) + 1;

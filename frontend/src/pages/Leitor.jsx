@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { buscarCapitulo, registrarLeitura } from "../api/capitulos";
 import { useAuth } from "../context/useAuth";
 import { salvarProgresso } from "../utils/progresso";
+import { LeitorEsqueleto } from "../components/Esqueleto";
 import NaoEncontrado from "./NaoEncontrado";
 
 function NavegacaoCapitulos({ capitulo }) {
@@ -74,7 +75,7 @@ function LeitorCapitulo({ id }) {
 
   if (erro === 404) return <NaoEncontrado mensagem="Capítulo não encontrado." />;
   if (erro) return <p className="text-red-400">Não foi possível carregar o capítulo. A API está rodando?</p>;
-  if (!capitulo) return <p className="text-paper/60">Carregando...</p>;
+  if (!capitulo) return <LeitorEsqueleto />;
 
   return (
     <article className="mx-auto max-w-3xl">
@@ -93,7 +94,7 @@ function LeitorCapitulo({ id }) {
         )}
       </header>
 
-      <div className="z-30 md:sticky md:top-[57px] -mx-4 mb-6 border-y border-white/5 bg-base/95 px-4 py-2 backdrop-blur">
+      <div className="sticky top-[57px] z-30 -mx-4 mb-6 border-y border-white/5 bg-base/95 px-4 py-2 backdrop-blur">
         <NavegacaoCapitulos capitulo={capitulo} />
       </div>
 

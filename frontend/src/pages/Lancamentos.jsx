@@ -2,6 +2,7 @@ import { useCallback } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { listarLancamentos } from "../api/capitulos";
 import Capa from "../components/Capa";
+import { ListaEsqueleto } from "../components/Esqueleto";
 import Paginacao from "../components/Paginacao";
 import useCarregamento from "../hooks/useCarregamento";
 import { tempoRelativo } from "../utils/tempo";
@@ -30,7 +31,7 @@ export default function Lancamentos() {
       </header>
 
       {erro && <p className="text-red-400">Não foi possível carregar os lançamentos. A API está rodando?</p>}
-      {!dados && !erro && <p className="text-paper/60">Carregando...</p>}
+      {!dados && !erro && <ListaEsqueleto />}
       {dados?.itens.length === 0 && <p className="text-paper/50">Nenhum capítulo cadastrado ainda.</p>}
 
       {dados?.itens.length > 0 && (

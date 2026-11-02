@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { listarGeneros, listarMangas } from "../api/mangas";
+import { GradeEsqueleto } from "../components/Esqueleto";
 import MangaCard from "../components/MangaCard";
 import Paginacao from "../components/Paginacao";
 import useCarregamento from "../hooks/useCarregamento";
@@ -139,7 +140,7 @@ export default function Series() {
       )}
 
       {erro && <p className="text-red-400">Não foi possível carregar o catálogo. A API está rodando?</p>}
-      {!dados && !erro && <p className="text-paper/60">Carregando...</p>}
+      {!dados && !erro && <GradeEsqueleto />}
 
       {dados && (
         <div className={`space-y-8 transition-opacity ${carregando ? "opacity-50" : ""}`} aria-busy={carregando}>

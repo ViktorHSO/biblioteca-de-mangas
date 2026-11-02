@@ -1,7 +1,7 @@
 <h1 align="center">📚 Biblioteca de Mangás</h1>
 
 <p align="center">
-  API REST para gerenciamento de uma biblioteca pessoal de mangás, com cadastro de obras, capítulos e busca por múltiplos filtros.
+  Aplicação completa para catalogar e ler mangás: uma API REST em FastAPI e um site de leitura em React, com catálogo, ranking, leitor de capítulos e área de administrador.
 </p>
 
 <p align="center">
@@ -9,13 +9,19 @@
   <img src="https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi" alt="FastAPI" />
   <img src="https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white" alt="MySQL" />
   <img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React" />
+  <img src="https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite" />
+  <img src="https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white" alt="Tailwind CSS" />
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/status-em%20desenvolvimento-yellow?style=for-the-badge" alt="Em desenvolvimento" />
+  <img src="https://img.shields.io/badge/status-funcional-brightgreen?style=for-the-badge" alt="Funcional" />
 </p>
 
-> 🚧 **Projeto em desenvolvimento ativo.** O back-end (API) já está funcional com CRUD completo, relacionamento entre tabelas e filtros de busca. O front-end em React ainda está sendo construído. Acompanhe o progresso na seção [Próximos passos](#-próximos-passos).
+> ✅ **Projeto funcional:** a API e o site de leitura estão completos e testados. As próximas melhorias estão em [Próximos passos](#proximos-passos).
+
+<p align="center">
+  <img src="docs/screenshots/home.png" alt="Página inicial com banner de destaques, novos capítulos e séries em alta" width="900" />
+</p>
 
 ---
 
@@ -23,18 +29,42 @@
 
 O **Biblioteca de Mangás** é um projeto pessoal criado para organizar e consultar uma coleção de mangás: título, autor, gênero, sinopse, status de leitura (quero ler / lendo / concluído) e os capítulos de cada obra.
 
-O objetivo principal do projeto é praticar a construção de uma API REST completa, com relacionamento entre tabelas, filtros de busca e paginação — servindo também como projeto de portfólio.
+O visual segue o estilo dos sites de leitura de mangá: página inicial com destaques e lançamentos, catálogo com filtros, ranking e um leitor de capítulos em rolagem vertical. Qualquer pessoa pode navegar e ler; só o administrador cadastra e edita.
+
+O objetivo é praticar o desenvolvimento de uma aplicação completa, do banco de dados à interface, com atenção a segurança, testes e organização de código — servindo também como projeto de portfólio.
 
 ## 🚀 Funcionalidades
 
-- ✅ CRUD completo de mangás (criar, listar, buscar por ID, atualizar, deletar)
-- ✅ Capítulos vinculados a um mangá (1:N) e páginas de imagem por capítulo, para o leitor
-- ✅ Busca com filtros combináveis (título, autor, gênero, status, tipo) e ordenação
-- ✅ Paginação de resultados
-- ✅ Ranking por visualizações, destaques, últimos capítulos e lista de gêneros
+**Site (React)**
+- ✅ Página inicial com banner de destaques, novos capítulos, séries em alta e adicionadas recentemente
+- ✅ Catálogo com busca, filtros (gênero, status, tipo), ordenação e paginação guardados na URL
+- ✅ Busca rápida com o atalho **Ctrl+K**, navegável pelo teclado
+- ✅ Ranking das séries mais vistas e página de lançamentos
+- ✅ Leitor de capítulos em rolagem vertical, com anterior/próximo pelas setas **← →** e progresso de leitura salvo
+- ✅ Área do administrador: cadastro, edição e exclusão de mangás e capítulos (páginas coladas uma URL por linha)
+- ✅ Layout responsivo com menu para celular, carregamento com *skeletons* e avisos de sucesso/erro
+
+**API (FastAPI)**
+- ✅ CRUD completo de mangás e capítulos (1:N), com as páginas de imagem de cada capítulo
+- ✅ Busca com filtros combináveis (título, autor, gênero, status, tipo), ordenação e paginação
+- ✅ Ranking por visualizações, destaques, mangás atualizados, lançamentos e lista de gêneros
 - ✅ Login de administrador com JWT: leitura pública, escrita protegida
-- ✅ Testes automatizados com pytest
+- ✅ Testes automatizados com pytest (SQLite e MySQL/MariaDB)
 - ✅ Documentação automática via Swagger
+
+## 📸 Capturas de tela
+
+> Dados e capas fictícios, criados só para as demonstrações.
+
+| Catálogo com filtros | Página do mangá |
+|---|---|
+| <img src="docs/screenshots/catalogo.png" alt="Catálogo de séries filtrado por gênero" /> | <img src="docs/screenshots/manga.png" alt="Página de um mangá com sinopse e lista de capítulos" /> |
+| **Leitor de capítulos** | **Busca rápida (Ctrl+K)** |
+| <img src="docs/screenshots/leitor.png" alt="Leitor com páginas em rolagem vertical" /> | <img src="docs/screenshots/busca-rapida.png" alt="Janela de busca rápida com resultados" /> |
+
+<p align="center">
+  <img src="docs/screenshots/celular.png" alt="Página inicial no celular" width="260" />
+</p>
 
 ## 🛠️ Tecnologias utilizadas
 
@@ -49,7 +79,12 @@ O objetivo principal do projeto é praticar a construção de uma API REST compl
 - [pytest](https://docs.pytest.org/) (testes)
 
 **Front-end**
-- [React](https://react.dev/)
+- [React](https://react.dev/) 19
+- [Vite](https://vite.dev/) (build e servidor de desenvolvimento)
+- [Tailwind CSS](https://tailwindcss.com/) v4 (estilos)
+- [React Router](https://reactrouter.com/) (rotas)
+- [Axios](https://axios-http.com/) (requisições à API)
+- [ESLint](https://eslint.org/) com as regras de hooks do React
 
 ## 📂 Estrutura do projeto
 
@@ -69,7 +104,16 @@ biblioteca-de-mangas/
 │   ├── tests/               # testes automatizados (pytest)
 │   ├── .env.example         # modelo das variáveis de ambiente
 │   └── requirements.txt
-└── frontend/                # interface em React
+├── frontend/
+│   ├── src/
+│   │   ├── api/             # chamadas à API (axios, token e sessão expirada)
+│   │   ├── components/      # peças reaproveitáveis (cards, formulários, busca rápida...)
+│   │   ├── context/         # login do administrador e avisos (toasts)
+│   │   ├── hooks/           # carregamento de dados e atalho Ctrl+K
+│   │   ├── pages/           # uma página por rota
+│   │   └── utils/           # datas, números, URL e opções compartilhadas
+│   └── .env.example         # endereço da API
+└── docs/screenshots/        # imagens deste README
 ```
 
 ## ⚙️ Como rodar o projeto
@@ -96,7 +140,14 @@ Crie o banco no MySQL:
 CREATE DATABASE biblioteca_mangas;
 ```
 
-Copie `backend/.env.example` para `backend/.env` e preencha os valores. A `SECRET_KEY` pode ser gerada com:
+Copie o modelo de variáveis de ambiente e preencha os valores:
+
+```bash
+copy .env.example .env     # Windows
+# cp .env.example .env     # Mac/Linux
+```
+
+A `SECRET_KEY` pode ser gerada com:
 
 ```bash
 python -c "import secrets; print(secrets.token_urlsafe(64))"
@@ -134,8 +185,24 @@ Os testes usam um banco SQLite temporário, sem tocar no MySQL.
 ```bash
 cd frontend
 npm install
+copy .env.example .env     # Windows (Mac/Linux: cp .env.example .env)
 npm run dev
 ```
+
+O site abre em `http://localhost:5173`. Para entrar como administrador, clique em **Entrar** e use o usuário criado com `python -m app.criar_admin`.
+
+| Variável | Para que serve | Padrão |
+|---|---|---|
+| `VITE_API_URL` | Endereço da API | `http://127.0.0.1:8000` |
+
+Outros comandos: `npm run lint` (verifica o código) e `npm run build` (gera a versão de produção em `dist/`).
+
+### Atalhos do site
+
+| Atalho | Onde | O que faz |
+|---|---|---|
+| `Ctrl` + `K` | qualquer página | Abre a busca rápida (`↑` `↓` escolhem, `Enter` abre, `Esc` fecha) |
+| `←` / `→` | leitor | Capítulo anterior / próximo |
 
 ## 📌 Endpoints principais
 
@@ -148,13 +215,14 @@ npm run dev
 | GET | `/mangas/` | Lista mangás (filtros, ordenação e paginação) |
 | GET | `/mangas/ranking` | Mais vistos |
 | GET | `/mangas/destaques` | Mangás em destaque |
+| GET | `/mangas/atualizados` | Mangás com capítulo novo, com os 2 últimos capítulos |
 | GET | `/mangas/generos` | Lista de gêneros cadastrados |
 | GET | `/mangas/{id}` | Mangá com a lista de capítulos |
 | POST | `/mangas/` 🔒 | Cadastra um mangá |
 | PUT | `/mangas/{id}` 🔒 | Atualiza um mangá |
 | DELETE | `/mangas/{id}` 🔒 | Remove um mangá (e seus capítulos) |
 | POST | `/mangas/{id}/visualizar` | Conta uma visualização |
-| GET | `/capitulos/recentes` | Últimos capítulos lançados |
+| GET | `/capitulos/recentes` | Últimos capítulos lançados (paginado) |
 | GET | `/capitulos/manga/{manga_id}` | Capítulos de um mangá |
 | GET | `/capitulos/{id}` | Capítulo com páginas e navegação (anterior/próximo) |
 | POST | `/capitulos/` 🔒 | Cadastra um capítulo |
@@ -165,6 +233,7 @@ npm run dev
 
 ## 🔐 Segurança
 
+**API**
 - Senhas guardadas apenas como hash **bcrypt**; login com token **JWT** assinado e com expiração.
 - Rotas de escrita protegidas; leitura pública.
 - Validação de todos os dados de entrada (tamanhos, valores permitidos, campos extras recusados).
@@ -175,12 +244,25 @@ npm run dev
 - Erros internos não expõem detalhes do servidor.
 - Segredos só em variáveis de ambiente; dependências com versões fixadas e auditadas com `pip-audit` e `npm audit`.
 
+**Site**
+- Token guardado no `sessionStorage` (some ao fechar a aba) e descartado automaticamente quando a API responde 401.
+- Páginas de administrador bloqueadas sem login (a proteção de verdade continua na API).
+- Nenhum HTML vindo da API é injetado na página (sem `dangerouslySetInnerHTML`); imagens só de endereços `http`/`https`.
+- Parâmetros lidos da URL (filtros, página) validados contra os valores aceitos antes de chegar à API.
+- Imagens externas carregadas sem enviar o endereço de origem (`referrer`), e links externos com `rel="noopener noreferrer"`.
+
+<a id="proximos-passos"></a>
+
 ## 🗺️ Próximos passos
 
-- [ ] Interface completa em React (estilo site de leitura, com leitor de capítulos)
+- [x] Interface completa em React (estilo site de leitura, com leitor de capítulos)
 - [x] Autenticação de administrador
-- [ ] Upload de imagem de capa
-- [ ] Deploy da API
+- [x] Catálogo, ranking, lançamentos e busca rápida
+- [ ] Upload de imagem de capa e das páginas (hoje são cadastradas por URL)
+- [ ] Contas de leitor, com progresso de leitura sincronizado entre dispositivos
+- [ ] Testes automatizados do front-end (Vitest + Testing Library)
+- [ ] Integração contínua (GitHub Actions rodando testes, lint e auditorias)
+- [ ] Deploy da API e do site
 
 ## 👤 Autor
 

@@ -1,12 +1,15 @@
 import { useNavigate } from "react-router-dom";
 import { criarManga } from "../api/mangas";
 import MangaForm from "../components/MangaForm";
+import { useToast } from "../context/useToast";
 
 export default function CriarManga() {
   const navigate = useNavigate();
+  const { avisar } = useToast();
 
   async function salvar(dados) {
     const manga = await criarManga(dados);
+    avisar("Mangá cadastrado.");
     navigate(`/manga/${manga.id}`);
   }
 

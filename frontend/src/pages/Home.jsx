@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { listarAtualizados, listarDestaques, listarMangas, listarRanking } from "../api/mangas";
 import EmAlta from "../components/home/EmAlta";
 import CarrosselDestaques from "../components/home/CarrosselDestaques";
+import { HomeEsqueleto } from "../components/Esqueleto";
 import NovosCapitulos from "../components/home/NovosCapitulos";
 import MangaCard from "../components/MangaCard";
 import Secao from "../components/Secao";
@@ -24,7 +25,7 @@ export default function Home() {
   const { dados, erro, carregando } = useCarregamento(carregarHome);
 
   if (erro) return <p className="text-red-400">Não foi possível carregar a página. A API está rodando?</p>;
-  if (carregando && !dados) return <p className="text-paper/60">Carregando...</p>;
+  if (carregando && !dados) return <HomeEsqueleto />;
 
   if (dados.recentes.length === 0) {
     return (

@@ -1,11 +1,14 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { atualizarManga, buscarManga } from "../api/mangas";
+import { FormularioEsqueleto } from "../components/Esqueleto";
 import MangaForm from "../components/MangaForm";
+import { useToast } from "../context/useToast";
 
 export default function EditarManga() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { avisar } = useToast();
   const [manga, setManga] = useState(null);
   const [erro, setErro] = useState(null);
 
@@ -19,11 +22,12 @@ export default function EditarManga() {
 
   async function salvar(dados) {
     await atualizarManga(id, dados);
+    avisar("Alterações salvas.");
     navigate(`/manga/${id}`);
   }
 
   if (erro) return <p className="text-red-400">{erro}</p>;
-  if (!manga) return <p className="text-paper/60">Carregando...</p>;
+  if (!manga) return <FormularioEsqueleto />;
 
   return (
     <section>
