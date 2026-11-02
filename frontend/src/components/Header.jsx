@@ -1,5 +1,9 @@
+import { useCallback, useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
+import useAtalhoBusca from "../hooks/useAtalhoBusca";
+import BuscaRapida from "./BuscaRapida";
+import IconeLupa from "./IconeLupa";
 
 const LINKS = [
   { para: "/", texto: "Início" },
@@ -15,6 +19,9 @@ function classeDoLink({ isActive }) {
 export default function Header() {
   const { usuario, logado, logout } = useAuth();
   const navigate = useNavigate();
+  const [buscaAberta, setBuscaAberta] = useState(false);
+  const abrirBusca = useCallback(() => setBuscaAberta(true), []);
+  useAtalhoBusca(abrirBusca);
 
   function sair() {
     logout();
@@ -40,6 +47,16 @@ export default function Header() {
         </nav>
 
         <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={abrirBusca}
+            aria-label="Buscar (Ctrl+K)"
+            className="flex items-center gap-2 rounded-md border border-white/10 px-2.5 py-1.5 text-sm text-paper/60 transition-colors hover:border-accent hover:text-paper"
+          >
+            <IconeLupa />
+            <span className="hidden lg:inline">Buscar</span>
+            <kbd className="hidden rounded border border-white/10 px-1 text-[10px] text-paper/40 lg:inline">Ctrl K</kbd>
+          </button>
           {logado ? (
             <>
               <Link
@@ -64,6 +81,7 @@ export default function Header() {
           )}
         </div>
       </div>
+      <BuscaRapida aberta={buscaAberta} aoFechar={() => setBuscaAberta(false)} />
     </header>
   );
 }
