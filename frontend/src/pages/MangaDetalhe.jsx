@@ -2,9 +2,11 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { buscarManga, excluirManga, registrarVisualizacao } from "../api/mangas";
 import ConfirmDialog from "../components/ConfirmDialog";
+import { DetalheEsqueleto } from "../components/Esqueleto";
 import ListaCapitulos from "../components/ListaCapitulos";
 import StatusBadge from "../components/StatusBadge";
 import { useAuth } from "../context/useAuth";
+import { useToast } from "../context/useToast";
 import { lerProgresso } from "../utils/progresso";
 import NaoEncontrado from "./NaoEncontrado";
 
@@ -15,10 +17,16 @@ function separarGeneros(genero) {
     .filter(Boolean);
 }
 
+// A key recria a página ao trocar de mangá (ex.: pela busca rápida), sem mostrar o anterior.
 export default function MangaDetalhe() {
   const { id } = useParams();
+  return <PaginaManga key={id} id={id} />;
+}
+
+function PaginaManga({ id }) {
   const navigate = useNavigate();
   const { logado } = useAuth();
+  const { avisar } = useToast();
   const [manga, setManga] = useState(null);
   const [erro, setErro] = useState(null);
   const [confirmandoExclusao, setConfirmandoExclusao] = useState(false);
@@ -41,6 +49,7 @@ export default function MangaDetalhe() {
   async function excluir() {
     try {
       await excluirManga(id);
+      avisar("Mangá excluído.");
       navigate("/");
     } catch {
       setConfirmandoExclusao(false);
@@ -50,7 +59,7 @@ export default function MangaDetalhe() {
 
   if (erro === 404) return <NaoEncontrado mensagem="Mangá não encontrado." />;
   if (erro) return <p className="text-red-400">Não foi possível carregar o mangá. A API está rodando?</p>;
-  if (!manga) return <p className="text-paper/60">Carregando...</p>;
+  if (!manga) return <DetalheEsqueleto />;
 
   const generos = separarGeneros(manga.genero);
   const capitulos = manga.capitulos;

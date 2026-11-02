@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { buscarUsuarioLogado, login as loginApi } from "../api/auth";
 import { definirToken, quandoSessaoExpirar } from "../api/client";
 import { AuthContext } from "./contexto";
+import { useToast } from "./useToast";
 
 const CHAVE_TOKEN = "biblioteca:token";
 
@@ -27,6 +28,7 @@ function salvarToken(token) {
 export function AuthProvider({ children }) {
   const [usuario, setUsuario] = useState(null);
   const [carregando, setCarregando] = useState(() => Boolean(lerTokenSalvo()));
+  const { avisar } = useToast();
 
   const logout = useCallback(() => {
     definirToken(null);
@@ -35,7 +37,10 @@ export function AuthProvider({ children }) {
   }, []);
 
   useEffect(() => {
-    quandoSessaoExpirar(logout);
+    quandoSessaoExpirar(() => {
+      logout();
+      avisar("Sua sessão expirou. Entre novamente.", "erro");
+    });
 
     const token = lerTokenSalvo();
     if (!token) return;
@@ -45,7 +50,7 @@ export function AuthProvider({ children }) {
       .then(setUsuario)
       .catch(logout)
       .finally(() => setCarregando(false));
-  }, [logout]);
+  }, [logout, avisar]);
 
   const login = useCallback(async (nomeUsuario, senha) => {
     const { access_token: token } = await loginApi(nomeUsuario, senha);

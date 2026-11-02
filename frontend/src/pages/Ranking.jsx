@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { listarRanking } from "../api/mangas";
 import Capa from "../components/Capa";
+import { ListaEsqueleto } from "../components/Esqueleto";
 import StatusBadge from "../components/StatusBadge";
 import useCarregamento from "../hooks/useCarregamento";
 import { formatarNumero } from "../utils/numero";
@@ -25,7 +26,7 @@ export default function Ranking() {
       </header>
 
       {erro && <p className="text-red-400">Não foi possível carregar o ranking. A API está rodando?</p>}
-      {!mangas && !erro && <p className="text-paper/60">Carregando...</p>}
+      {!mangas && !erro && <ListaEsqueleto />}
       {mangas?.length === 0 && <p className="text-paper/50">Nenhum mangá cadastrado ainda.</p>}
 
       {mangas?.length > 0 && (

@@ -3,11 +3,14 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { atualizarCapitulo, buscarCapitulo, excluirCapitulo } from "../api/capitulos";
 import CapituloForm from "../components/CapituloForm";
 import ConfirmDialog from "../components/ConfirmDialog";
+import { FormularioEsqueleto } from "../components/Esqueleto";
+import { useToast } from "../context/useToast";
 import NaoEncontrado from "./NaoEncontrado";
 
 export default function EditarCapitulo() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { avisar } = useToast();
   const [capitulo, setCapitulo] = useState(null);
   const [erro, setErro] = useState(null);
   const [confirmandoExclusao, setConfirmandoExclusao] = useState(false);
@@ -20,12 +23,14 @@ export default function EditarCapitulo() {
 
   async function salvar(dados) {
     await atualizarCapitulo(id, dados);
+    avisar("Alterações salvas.");
     navigate(`/capitulo/${id}`);
   }
 
   async function excluir() {
     try {
       await excluirCapitulo(id);
+      avisar("Capítulo excluído.");
       navigate(`/manga/${capitulo.manga_id}`);
     } catch {
       setConfirmandoExclusao(false);
@@ -35,7 +40,7 @@ export default function EditarCapitulo() {
 
   if (erro === 404) return <NaoEncontrado mensagem="Capítulo não encontrado." />;
   if (erro) return <p className="text-red-400">{erro === "erro" ? "Não foi possível carregar o capítulo." : erro}</p>;
-  if (!capitulo) return <p className="text-paper/60">Carregando...</p>;
+  if (!capitulo) return <FormularioEsqueleto />;
 
   return (
     <section>

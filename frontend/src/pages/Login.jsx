@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
+import { useToast } from "../context/useToast";
 import { classeCampo } from "../utils/formulario";
 
 function mensagemDeErro(error) {
@@ -12,6 +13,7 @@ function mensagemDeErro(error) {
 
 export default function Login() {
   const { login, logado } = useAuth();
+  const { avisar } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
   const [usuario, setUsuario] = useState("");
@@ -29,6 +31,7 @@ export default function Login() {
     setErro(null);
     try {
       await login(usuario, senha);
+      avisar(`Bem-vindo, ${usuario}!`);
       navigate(destino, { replace: true });
     } catch (error) {
       setErro(mensagemDeErro(error));
