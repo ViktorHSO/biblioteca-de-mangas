@@ -41,11 +41,12 @@ O objetivo é praticar o desenvolvimento de uma aplicação completa, do banco d
 - ✅ Busca rápida com o atalho **Ctrl+K**, navegável pelo teclado
 - ✅ Ranking das séries mais vistas e página de lançamentos
 - ✅ Leitor de capítulos em rolagem vertical, com anterior/próximo pelas setas **← →** e progresso de leitura salvo
-- ✅ Área do administrador: cadastro, edição e exclusão de mangás e capítulos (páginas coladas uma URL por linha)
+- ✅ Área do administrador: cadastro, edição e exclusão de mangás e capítulos, com a capa escolhida do computador ou por link (páginas coladas uma URL por linha)
 - ✅ Layout responsivo com menu para celular, carregamento com *skeletons* e avisos de sucesso/erro
 
 **API (FastAPI)**
 - ✅ CRUD completo de mangás e capítulos (1:N), com as páginas de imagem de cada capítulo
+- ✅ Envio de capas (JPG, PNG ou WEBP até 5 MB), com o tipo conferido pelo conteúdo do arquivo
 - ✅ Busca com filtros combináveis (título, autor, gênero, status, tipo), ordenação e paginação
 - ✅ Ranking por visualizações, destaques, mangás atualizados, lançamentos e lista de gêneros
 - ✅ Login de administrador com JWT: leitura pública, escrita protegida
@@ -101,6 +102,7 @@ biblioteca-de-mangas/
 │   │   ├── routers/         # rotas da API
 │   │   └── crud/            # funções de acesso ao banco
 │   ├── migrations/          # scripts SQL para atualizar um banco já existente
+│   ├── uploads/             # capas enviadas pelo site (criada sozinha, fora do Git)
 │   ├── tests/               # testes automatizados (pytest)
 │   ├── .env.example         # modelo das variáveis de ambiente
 │   └── requirements.txt
@@ -163,6 +165,14 @@ Crie o administrador (a senha é digitada sem aparecer na tela):
 python -m app.criar_admin
 ```
 
+Para usar como capa as imagens de uma pasta, com o nome do arquivo igual ao título do mangá (maiúsculas e acentos não importam):
+
+```bash
+python -m app.importar_capas "C:\caminho\da\pasta"
+```
+
+As capas enviadas ficam em `backend/uploads/` (fora do Git).
+
 Rode a API:
 
 ```bash
@@ -220,6 +230,7 @@ Outros comandos: `npm run lint` (verifica o código) e `npm run build` (gera a v
 | GET | `/mangas/{id}` | Mangá com a lista de capítulos |
 | POST | `/mangas/` 🔒 | Cadastra um mangá |
 | PUT | `/mangas/{id}` 🔒 | Atualiza um mangá |
+| POST | `/mangas/{id}/capa` 🔒 | Envia a imagem da capa (`multipart/form-data`, campo `arquivo`) |
 | DELETE | `/mangas/{id}` 🔒 | Remove um mangá (e seus capítulos) |
 | POST | `/mangas/{id}/visualizar` | Conta uma visualização |
 | GET | `/capitulos/recentes` | Últimos capítulos lançados (paginado) |
@@ -238,6 +249,7 @@ Outros comandos: `npm run lint` (verifica o código) e `npm run build` (gera a v
 - Rotas de escrita protegidas; leitura pública.
 - Validação de todos os dados de entrada (tamanhos, valores permitidos, campos extras recusados).
 - URLs de imagens aceitas só com `http`/`https`, bloqueando `javascript:` e `data:` (XSS).
+- Upload de capas só para o administrador, com limite de 5 MB conferido antes de receber o arquivo, tipo identificado pelos primeiros bytes (SVG e outros formatos recusados) e nome aleatório gerado pela API.
 - Consultas via ORM (sem SQL montado à mão) e curingas `%`/`_` escapados nas buscas.
 - Limite de tentativas de login e de contagem de visualizações por IP.
 - CORS restrito às origens configuradas e cabeçalhos de segurança nas respostas.
@@ -258,7 +270,8 @@ Outros comandos: `npm run lint` (verifica o código) e `npm run build` (gera a v
 - [x] Interface completa em React (estilo site de leitura, com leitor de capítulos)
 - [x] Autenticação de administrador
 - [x] Catálogo, ranking, lançamentos e busca rápida
-- [ ] Upload de imagem de capa e das páginas (hoje são cadastradas por URL)
+- [x] Upload da imagem de capa pelo computador
+- [ ] Upload das páginas dos capítulos (hoje são cadastradas por URL)
 - [ ] Contas de leitor, com progresso de leitura sincronizado entre dispositivos
 - [ ] Testes automatizados do front-end (Vitest + Testing Library)
 - [ ] Integração contínua (GitHub Actions rodando testes, lint e auditorias)

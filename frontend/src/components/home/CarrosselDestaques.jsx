@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { urlDaImagem } from "../../utils/imagem";
 import Capa from "../Capa";
 
 const INTERVALO_MS = 6000;
@@ -38,7 +39,7 @@ export default function CarrosselDestaques({ mangas }) {
     >
       {manga.capa_url && (
         <img
-          src={manga.capa_url}
+          src={urlDaImagem(manga.capa_url)}
           alt=""
           aria-hidden="true"
           className="absolute inset-0 h-full w-full scale-110 object-cover opacity-25 blur-xl"

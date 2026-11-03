@@ -5,12 +5,14 @@ insegura, a API se recusa a iniciar e mostra o motivo.
 """
 import os
 from dataclasses import dataclass
+from pathlib import Path
 
 from dotenv import load_dotenv
 
 load_dotenv()
 
 TAMANHO_MINIMO_CHAVE = 32
+PASTA_UPLOADS_PADRAO = Path(__file__).resolve().parents[2] / "uploads"  # backend/uploads
 
 
 def _obrigatoria(nome: str) -> str:
@@ -36,6 +38,7 @@ class Configuracoes:
     expiracao_token_minutos: int
     cors_origins: list[str]
     rate_limit_ativo: bool
+    uploads_dir: str
 
 
 def carregar_configuracoes() -> Configuracoes:
@@ -57,6 +60,7 @@ def carregar_configuracoes() -> Configuracoes:
         expiracao_token_minutos=int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60")),
         cors_origins=origens,
         rate_limit_ativo=os.getenv("RATE_LIMIT_ATIVO", "true").lower() != "false",
+        uploads_dir=os.getenv("UPLOADS_DIR", str(PASTA_UPLOADS_PADRAO)),
     )
 
 

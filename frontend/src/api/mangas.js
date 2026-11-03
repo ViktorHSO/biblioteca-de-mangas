@@ -44,6 +44,13 @@ export async function atualizarManga(id, dados) {
   return data;
 }
 
+export async function enviarCapa(id, arquivo) {
+  const formulario = new FormData();
+  formulario.append("arquivo", arquivo);
+  const { data } = await api.post(`/mangas/${id}/capa`, formulario);
+  return data;
+}
+
 export async function excluirManga(id) {
   await api.delete(`/mangas/${id}`);
 }

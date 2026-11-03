@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { atualizarManga, buscarManga } from "../api/mangas";
+import { atualizarManga, buscarManga, enviarCapa } from "../api/mangas";
 import { FormularioEsqueleto } from "../components/Esqueleto";
 import MangaForm from "../components/MangaForm";
 import { useToast } from "../context/useToast";
@@ -20,8 +20,9 @@ export default function EditarManga() {
       );
   }, [id]);
 
-  async function salvar(dados) {
+  async function salvar(dados, arquivo) {
     await atualizarManga(id, dados);
+    if (arquivo) await enviarCapa(id, arquivo);
     avisar("Alterações salvas.");
     navigate(`/manga/${id}`);
   }

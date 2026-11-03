@@ -3,6 +3,7 @@ import unicodedata
 from sqlalchemy import func, update
 from sqlalchemy.orm import Session
 
+from app.core.capas import remover_capa_local
 from app.crud.utils import padrao_like
 from app.models.capitulo import Capitulo
 from app.models.manga import Manga
@@ -127,11 +128,24 @@ def update_manga(db: Session, manga_id: int, dados: MangaCreate):
     if not manga:
         return None
 
+    capa_anterior = manga.capa_url
     for campo, valor in dados.model_dump().items():
         setattr(manga, campo, valor)
 
     db.commit()
     db.refresh(manga)
+    if capa_anterior != manga.capa_url:
+        remover_capa_local(capa_anterior)
+    return manga
+
+
+def trocar_capa(db: Session, manga: Manga, caminho: str):
+    capa_anterior = manga.capa_url
+    manga.capa_url = caminho
+    db.commit()
+    db.refresh(manga)
+    if capa_anterior != caminho:
+        remover_capa_local(capa_anterior)
     return manga
 
 
@@ -142,6 +156,7 @@ def delete_manga(db: Session, manga_id: int):
 
     db.delete(manga)
     db.commit()
+    remover_capa_local(manga.capa_url)
     return manga
 
 

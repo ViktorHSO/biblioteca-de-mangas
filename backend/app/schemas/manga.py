@@ -3,7 +3,7 @@ from typing import Annotated
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints
 
 from app.schemas.capitulo import CapituloResumo
-from app.schemas.comum import DataHoraUTC, StatusLeitura, TipoObra, UrlImagem, texto_opcional
+from app.schemas.comum import DataHoraUTC, StatusLeitura, TipoObra, UrlCapa, texto_opcional
 
 Titulo = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=255)]
 
@@ -21,7 +21,7 @@ class MangaCreate(BaseModel):
     sinopse: texto_opcional(5000) = None
     status: StatusLeitura = "quero ler"
     tipo: TipoObra = "mangá"
-    capa_url: UrlImagem = None
+    capa_url: UrlCapa = None
     destaque: bool = False
 
 

@@ -13,6 +13,7 @@ os.environ["DATABASE_URL"] = os.getenv(
 )
 os.environ["SECRET_KEY"] = "chave-de-teste-" + "x" * 48
 os.environ["CORS_ORIGINS"] = "http://localhost:5173"
+os.environ["UPLOADS_DIR"] = os.path.join(_pasta_temporaria, "uploads")
 
 import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402

@@ -1,8 +1,8 @@
 import axios from "axios";
 
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8000",
-});
+export const URL_DA_API = import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8000";
+
+const api = axios.create({ baseURL: URL_DA_API });
 
 let tokenAtual = null;
 let aoExpirarSessao = () => {};
