@@ -1,6 +1,7 @@
-import { useState } from "react";
-import { errosDeCampo } from "../utils/erros";
+import { useEffect, useRef, useState } from "react";
+import { errosDeCampo, mensagemDaApi } from "../utils/erros";
 import { classeCampo, ehUrlHttp } from "../utils/formulario";
+import { ehCapaEnviada, problemaNoArquivo, tamanhoLegivel, TIPOS_DE_CAPA, urlDaImagem } from "../utils/imagem";
 import { STATUS, TIPOS } from "../utils/opcoes";
 import Campo from "./Campo";
 
@@ -20,6 +21,34 @@ export default function MangaForm({ valoresIniciais, textoBotao, onSalvar }) {
   const [erros, setErros] = useState({});
   const [erroGeral, setErroGeral] = useState(null);
   const [enviando, setEnviando] = useState(false);
+  // Imagem escolhida no computador: só é enviada à API depois que o mangá é salvo.
+  const [arquivo, setArquivo] = useState(null);
+  const [previa, setPrevia] = useState(null);
+  const previaAtual = useRef(null);
+
+  // Libera da memória a pré-visualização da imagem ao sair da página.
+  useEffect(() => () => previaAtual.current && URL.revokeObjectURL(previaAtual.current), []);
+
+  function trocarPrevia(novoArquivo) {
+    if (previaAtual.current) URL.revokeObjectURL(previaAtual.current);
+    previaAtual.current = novoArquivo ? URL.createObjectURL(novoArquivo) : null;
+    setPrevia(previaAtual.current);
+    setArquivo(novoArquivo);
+  }
+
+  function escolherArquivo(e) {
+    const escolhido = e.target.files?.[0];
+    e.target.value = ""; // permite escolher o mesmo arquivo de novo depois de remover
+    if (!escolhido) return;
+    const problema = problemaNoArquivo(escolhido);
+    setErros((anteriores) => ({ ...anteriores, capa_url: problema ?? undefined }));
+    if (!problema) trocarPrevia(escolhido);
+  }
+
+  function removerCapa() {
+    trocarPrevia(null);
+    setForm((anterior) => ({ ...anterior, capa_url: "" }));
+  }
 
   function alterar(e) {
     const { name, value, type, checked } = e.target;
@@ -34,11 +63,13 @@ export default function MangaForm({ valoresIniciais, textoBotao, onSalvar }) {
     try {
       // Envia só os campos do formulário: a API recusa campos extras (id, datas etc.).
       const dados = Object.fromEntries(Object.keys(VAZIO).map((campo) => [campo, form[campo]]));
-      await onSalvar(dados);
+      await onSalvar(dados, arquivo);
     } catch (error) {
       const status = error.response?.status;
-      if (status === 422) {
-        setErros(errosDeCampo(error));
+      if (status === 422 || status === 413) {
+        // Erro do envio da capa vem como texto; os do formulário, campo a campo.
+        const mensagemDaCapa = mensagemDaApi(error, null);
+        setErros(mensagemDaCapa ? { capa_url: mensagemDaCapa } : errosDeCampo(error));
         setErroGeral("Confira os campos destacados.");
       } else if (status === 401) {
         setErroGeral("Sua sessão expirou. Entre novamente para salvar.");
@@ -49,6 +80,10 @@ export default function MangaForm({ valoresIniciais, textoBotao, onSalvar }) {
       setEnviando(false);
     }
   }
+
+  const capaEnviada = ehCapaEnviada(form.capa_url);
+  const imagemDaPrevia =
+    previa ?? (capaEnviada || ehUrlHttp(form.capa_url) ? urlDaImagem(form.capa_url) : null);
 
   return (
     <form onSubmit={enviar} className="grid gap-6 md:grid-cols-[1fr_180px]">
@@ -87,16 +122,34 @@ export default function MangaForm({ valoresIniciais, textoBotao, onSalvar }) {
           <textarea name="sinopse" value={form.sinopse ?? ""} onChange={alterar} rows={5} maxLength={5000} className={classeCampo} />
         </Campo>
 
-        <Campo rotulo="URL da capa" erro={erros.capa_url} dica="Link de uma imagem começando com https://">
-          <input
-            name="capa_url"
-            type="url"
-            value={form.capa_url ?? ""}
-            onChange={alterar}
-            placeholder="https://..."
-            maxLength={500}
-            className={classeCampo}
-          />
+        <Campo rotulo="Capa" erro={erros.capa_url} dica="Imagem JPG, PNG ou WEBP de até 5 MB, ou o link de uma imagem.">
+          <div className="space-y-2">
+            <div className="flex flex-wrap items-center gap-3">
+              <label className="cursor-pointer rounded-md border border-white/15 px-3 py-2 text-sm text-paper/80 transition-colors hover:border-accent hover:text-paper focus-within:ring-2 focus-within:ring-accent">
+                Escolher imagem do computador
+                <input type="file" accept={TIPOS_DE_CAPA.join(",")} onChange={escolherArquivo} className="sr-only" />
+              </label>
+              {(arquivo || capaEnviada) && (
+                <span className="flex items-center gap-2 text-sm text-paper/60">
+                  {arquivo ? `${arquivo.name} (${tamanhoLegivel(arquivo.size)})` : "Imagem enviada do computador"}
+                  <button type="button" onClick={removerCapa} className="text-red-400 hover:underline">
+                    Remover
+                  </button>
+                </span>
+              )}
+            </div>
+            <input
+              name="capa_url"
+              type="url"
+              value={capaEnviada ? "" : form.capa_url ?? ""}
+              onChange={alterar}
+              disabled={Boolean(arquivo)}
+              placeholder={capaEnviada ? "Cole um link para trocar a imagem enviada" : "ou cole o link: https://..."}
+              maxLength={500}
+              aria-label="Link da capa"
+              className={`${classeCampo} disabled:opacity-40`}
+            />
+          </div>
         </Campo>
 
         <label className="flex items-center gap-2 text-sm text-paper/80">
@@ -118,8 +171,8 @@ export default function MangaForm({ valoresIniciais, textoBotao, onSalvar }) {
       <div className="order-first md:order-last">
         <span className="mb-1 block text-sm text-paper/80">Pré-visualização</span>
         <div className="aspect-[3/4] overflow-hidden rounded-md border border-black/60 bg-black/40">
-          {ehUrlHttp(form.capa_url) ? (
-            <img src={form.capa_url} alt="" className="h-full w-full object-cover" />
+          {imagemDaPrevia ? (
+            <img src={imagemDaPrevia} alt="" className="h-full w-full object-cover" />
           ) : (
             <div className="flex h-full items-center justify-center text-sm text-paper/30">Sem capa</div>
           )}

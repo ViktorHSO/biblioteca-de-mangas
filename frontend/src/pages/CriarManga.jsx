@@ -1,14 +1,25 @@
 import { useNavigate } from "react-router-dom";
-import { criarManga } from "../api/mangas";
+import { criarManga, enviarCapa } from "../api/mangas";
 import MangaForm from "../components/MangaForm";
 import { useToast } from "../context/useToast";
+import { mensagemDaApi } from "../utils/erros";
 
 export default function CriarManga() {
   const navigate = useNavigate();
   const { avisar } = useToast();
 
-  async function salvar(dados) {
+  async function salvar(dados, arquivo) {
     const manga = await criarManga(dados);
+    if (arquivo) {
+      try {
+        await enviarCapa(manga.id, arquivo);
+      } catch (error) {
+        // O mangá já existe: em vez de repetir o cadastro, leva à edição para tentar a capa de novo.
+        avisar(`Mangá cadastrado, mas a capa não foi enviada: ${mensagemDaApi(error, "tente novamente.")}`, "erro");
+        navigate(`/manga/${manga.id}/editar`);
+        return;
+      }
+    }
     avisar("Mangá cadastrado.");
     navigate(`/manga/${manga.id}`);
   }

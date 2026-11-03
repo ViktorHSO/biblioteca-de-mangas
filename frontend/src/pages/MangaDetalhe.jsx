@@ -7,6 +7,7 @@ import ListaCapitulos from "../components/ListaCapitulos";
 import StatusBadge from "../components/StatusBadge";
 import { useAuth } from "../context/useAuth";
 import { useToast } from "../context/useToast";
+import { urlDaImagem } from "../utils/imagem";
 import { lerProgresso } from "../utils/progresso";
 import NaoEncontrado from "./NaoEncontrado";
 
@@ -73,7 +74,7 @@ function PaginaManga({ id }) {
       <div className="grid gap-8 md:grid-cols-[220px_1fr]">
         <div className="mx-auto aspect-[3/4] w-48 overflow-hidden rounded-md border-2 border-black/60 bg-black/40 shadow-lg md:w-full">
           {manga.capa_url ? (
-            <img src={manga.capa_url} alt={`Capa de ${manga.titulo}`} className="h-full w-full object-cover" />
+            <img src={urlDaImagem(manga.capa_url)} alt={`Capa de ${manga.titulo}`} className="h-full w-full object-cover" />
           ) : (
             <div className="flex h-full items-center justify-center text-sm text-paper/30">Sem capa</div>
           )}
