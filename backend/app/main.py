@@ -3,11 +3,13 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
 from app import models  # noqa: F401  (registra todas as tabelas no SQLAlchemy)
+from app.core import capas
 from app.core.config import configuracoes
 from app.core.limitador import limitador
 from app.database import Base, engine
@@ -54,6 +56,19 @@ app.add_middleware(
 
 
 @app.middleware("http")
+async def limitar_tamanho_do_envio(request: Request, call_next):
+    # O corpo de um upload é lido antes de checar o login; por isso o tamanho é
+    # conferido aqui, pelo cabeçalho, antes de qualquer byte ser recebido.
+    if request.method == "POST" and request.url.path.endswith("/capa"):
+        tamanho = request.headers.get("content-length")
+        if tamanho is None or not tamanho.isdigit():
+            return JSONResponse(status_code=411, content={"detail": "Envio sem tamanho declarado."})
+        if int(tamanho) > capas.TAMANHO_MAXIMO_BYTES + 64 * 1024:  # folga para os campos do formulário
+            return JSONResponse(status_code=413, content={"detail": "A imagem pode ter no máximo 5 MB."})
+    return await call_next(request)
+
+
+@app.middleware("http")
 async def adicionar_cabecalhos_seguranca(request: Request, call_next):
     resposta = await call_next(request)
     for nome, valor in CABECALHOS_SEGURANCA.items():
@@ -72,6 +87,10 @@ async def erro_inesperado(request: Request, exc: Exception):
 app.include_router(auth_router.router)
 app.include_router(manga_router.router)
 app.include_router(capitulo_router.router)
+
+# Capas enviadas pelo computador. A pasta é criada se ainda não existir.
+capas.PASTA_CAPAS.mkdir(parents=True, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=configuracoes.uploads_dir), name="uploads")
 
 
 @app.get("/", tags=["Status"])

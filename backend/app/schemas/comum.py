@@ -1,4 +1,5 @@
 """Tipos reutilizados pelos schemas, com as regras de validação em um só lugar."""
+import re
 from datetime import datetime, timezone
 from typing import Annotated, Literal
 from urllib.parse import urlparse
@@ -17,6 +18,10 @@ def _vazio_para_none(valor):
         valor = valor.strip()
         return valor or None
     return valor
+
+
+# Caminho de uma capa enviada pelo computador (gerado pela própria API).
+_CAPA_ENVIADA = re.compile(r"^/uploads/capas/[0-9a-f]{32}\.(jpg|png|webp)$")
 
 
 def _validar_url(valor: str | None) -> str | None:
@@ -43,10 +48,24 @@ def _marcar_utc(valor: datetime) -> datetime:
 # o navegador interprete a data como horário local.
 DataHoraUTC = Annotated[datetime, AfterValidator(_marcar_utc)]
 
+def _validar_url_ou_capa_enviada(valor: str | None) -> str | None:
+    """Na capa do mangá vale também o caminho de uma imagem enviada pela rota /capa,
+    para o formulário de edição poder reenviar a capa atual sem perdê-la."""
+    if valor is not None and _CAPA_ENVIADA.match(valor):
+        return valor
+    return _validar_url(valor)
+
+
 UrlImagem = Annotated[
     Annotated[str, Field(max_length=TAMANHO_MAXIMO_URL)] | None,
     BeforeValidator(_vazio_para_none),
     AfterValidator(_validar_url),
+]
+
+UrlCapa = Annotated[
+    Annotated[str, Field(max_length=TAMANHO_MAXIMO_URL)] | None,
+    BeforeValidator(_vazio_para_none),
+    AfterValidator(_validar_url_ou_capa_enviada),
 ]
 
 UrlImagemObrigatoria = Annotated[
