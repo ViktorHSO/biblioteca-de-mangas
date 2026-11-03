@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { atualizarCapitulo, buscarCapitulo, excluirCapitulo } from "../api/capitulos";
+import { atualizarCapitulo, buscarCapitulo, enviarPaginas, excluirCapitulo } from "../api/capitulos";
 import CapituloForm from "../components/CapituloForm";
 import ConfirmDialog from "../components/ConfirmDialog";
 import { FormularioEsqueleto } from "../components/Esqueleto";
 import { useToast } from "../context/useToast";
+import { mensagemDaApi } from "../utils/erros";
 import NaoEncontrado from "./NaoEncontrado";
 
 export default function EditarCapitulo() {
@@ -14,6 +15,7 @@ export default function EditarCapitulo() {
   const [capitulo, setCapitulo] = useState(null);
   const [erro, setErro] = useState(null);
   const [confirmandoExclusao, setConfirmandoExclusao] = useState(false);
+  const [versao, setVersao] = useState(0);
 
   useEffect(() => {
     buscarCapitulo(id)
@@ -21,8 +23,19 @@ export default function EditarCapitulo() {
       .catch((error) => setErro(error.response?.status === 404 ? 404 : "erro"));
   }, [id]);
 
-  async function salvar(dados) {
+  async function salvar(dados, arquivos, aoProgredir) {
     await atualizarCapitulo(id, dados);
+    if (arquivos.length) {
+      try {
+        await enviarPaginas(id, arquivos, aoProgredir);
+      } catch (error) {
+        // Parte das imagens pode ter entrado: recarrega o capítulo para não enviar repetido.
+        avisar(`Nem todas as páginas foram enviadas: ${mensagemDaApi(error, "tente novamente.")}`, "erro");
+        setCapitulo(await buscarCapitulo(id));
+        setVersao((atual) => atual + 1);
+        return;
+      }
+    }
     avisar("Alterações salvas.");
     navigate(`/capitulo/${id}`);
   }
@@ -60,7 +73,7 @@ export default function EditarCapitulo() {
         </button>
       </header>
 
-      <CapituloForm valoresIniciais={capitulo} textoBotao="Salvar alterações" onSalvar={salvar} />
+      <CapituloForm key={versao} valoresIniciais={capitulo} textoBotao="Salvar alterações" onSalvar={salvar} />
 
       <ConfirmDialog
         aberto={confirmandoExclusao}

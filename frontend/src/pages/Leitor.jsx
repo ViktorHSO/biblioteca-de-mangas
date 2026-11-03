@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { buscarCapitulo, registrarLeitura } from "../api/capitulos";
 import { useAuth } from "../context/useAuth";
+import { urlDaImagem } from "../utils/imagem";
 import { salvarProgresso } from "../utils/progresso";
 import { LeitorEsqueleto } from "../components/Esqueleto";
 import NaoEncontrado from "./NaoEncontrado";
@@ -105,7 +106,7 @@ function LeitorCapitulo({ id }) {
           {capitulo.paginas.map((pagina) => (
             <img
               key={pagina.id}
-              src={pagina.imagem_url}
+              src={urlDaImagem(pagina.imagem_url)}
               alt={`Página ${pagina.ordem}`}
               loading="lazy"
               referrerPolicy="no-referrer"
