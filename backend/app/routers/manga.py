@@ -3,7 +3,7 @@ from typing import Literal
 from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, UploadFile, status
 from sqlalchemy.orm import Session
 
-from app.core import capas
+from app.core import uploads
 from app.core.dependencias import exigir_admin
 from app.core.limitador import limitador
 from app.crud import capitulo as crud_capitulo
@@ -111,10 +111,10 @@ async def enviar_capa(
     """Troca a capa do mangá por uma imagem enviada do computador."""
     manga = _buscar_ou_404(db, manga_id)
     # Lê no máximo 1 byte além do limite: basta para saber que passou, sem carregar o resto.
-    conteudo = await arquivo.read(capas.TAMANHO_MAXIMO_BYTES + 1)
+    conteudo = await arquivo.read(uploads.CAPA.tamanho_maximo + 1)
     try:
-        caminho = capas.salvar_capa(conteudo)
-    except capas.CapaInvalida as erro:
+        caminho = uploads.salvar_imagem(conteudo, uploads.CAPA)
+    except uploads.ImagemInvalida as erro:
         raise HTTPException(status_code=422, detail=str(erro)) from None
     return crud_manga.trocar_capa(db, manga, caminho)
 

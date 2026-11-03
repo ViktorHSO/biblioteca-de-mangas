@@ -20,8 +20,9 @@ def _vazio_para_none(valor):
     return valor
 
 
-# Caminho de uma capa enviada pelo computador (gerado pela própria API).
+# Caminhos de imagens enviadas pelo computador (gerados pela própria API).
 _CAPA_ENVIADA = re.compile(r"^/uploads/capas/[0-9a-f]{32}\.(jpg|png|webp)$")
+_PAGINA_ENVIADA = re.compile(r"^/uploads/paginas/[0-9a-f]{32}\.(jpg|png|webp)$")
 
 
 def _validar_url(valor: str | None) -> str | None:
@@ -68,11 +69,19 @@ UrlCapa = Annotated[
     AfterValidator(_validar_url_ou_capa_enviada),
 ]
 
+def _validar_url_ou_pagina_enviada(valor: str) -> str:
+    """Nas páginas vale também o caminho de uma imagem enviada pela rota de upload,
+    para a edição do capítulo poder reordenar ou remover páginas já enviadas."""
+    if _PAGINA_ENVIADA.match(valor):
+        return valor
+    return _validar_url(valor)
+
+
 UrlImagemObrigatoria = Annotated[
     str,
     BeforeValidator(lambda v: v.strip() if isinstance(v, str) else v),
     Field(min_length=1, max_length=TAMANHO_MAXIMO_URL),
-    AfterValidator(_validar_url),
+    AfterValidator(_validar_url_ou_pagina_enviada),
 ]
 
 

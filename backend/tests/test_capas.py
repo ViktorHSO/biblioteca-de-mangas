@@ -1,6 +1,8 @@
 from pathlib import Path
 
-from app.core.capas import PASTA_CAPAS
+from app.core.uploads import CAPA
+
+PASTA_CAPAS = CAPA.diretorio
 
 PNG = b"\x89PNG\r\n\x1a\n" + b"\x00" * 64
 WEBP = b"RIFF\x24\x00\x00\x00WEBPVP8 " + b"\x00" * 64

@@ -13,7 +13,7 @@ import unicodedata
 from pathlib import Path
 
 from app import models  # noqa: F401
-from app.core.capas import CapaInvalida, salvar_capa
+from app.core.uploads import CAPA, ImagemInvalida, salvar_imagem
 from app.crud.manga import trocar_capa
 from app.database import SessionLocal
 from app.models.manga import Manga
@@ -49,8 +49,8 @@ def main() -> int:
                 print(f"  sem mangá com esse nome: {imagem.name}")
                 continue
             try:
-                trocar_capa(db, manga, salvar_capa(imagem.read_bytes()))
-            except CapaInvalida as erro:
+                trocar_capa(db, manga, salvar_imagem(imagem.read_bytes(), CAPA))
+            except ImagemInvalida as erro:
                 print(f"  ignorada ({erro}): {imagem.name}")
                 continue
             atualizados += 1
