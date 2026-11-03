@@ -55,17 +55,22 @@ O objetivo é praticar o desenvolvimento de uma aplicação completa, do banco d
 
 ## 📸 Capturas de tela
 
-> Dados e capas fictícios, criados só para as demonstrações.
+<table>
+  <tr>
+    <td width="50%"><b>Catálogo com busca e filtros</b><br /><img src="docs/screenshots/catalogo.png" alt="Catálogo de séries com busca, filtros de gênero, status e tipo e ordenação" /></td>
+    <td width="50%"><b>Página do mangá</b><br /><img src="docs/screenshots/manga.png" alt="Página de um mangá com capa, gêneros, sinopse e lista de capítulos" /></td>
+  </tr>
+  <tr>
+    <td><b>Busca rápida (Ctrl+K)</b><br /><img src="docs/screenshots/busca-rapida.png" alt="Janela de busca rápida com resultados enquanto se digita" /></td>
+    <td><b>Ranking das séries mais vistas</b><br /><img src="docs/screenshots/ranking.png" alt="Ranking com posição, capa, gêneros e visualizações" /></td>
+  </tr>
+  <tr>
+    <td><b>Área do administrador: capa enviada do computador</b><br /><img src="docs/screenshots/cadastro.png" alt="Formulário de edição do mangá com a capa escolhida do computador e pré-visualização" /></td>
+    <td align="center"><b>No celular</b><br /><img src="docs/screenshots/celular.png" alt="Página inicial no celular" width="150" /></td>
+  </tr>
+</table>
 
-| Catálogo com filtros | Página do mangá |
-|---|---|
-| <img src="docs/screenshots/catalogo.png" alt="Catálogo de séries filtrado por gênero" /> | <img src="docs/screenshots/manga.png" alt="Página de um mangá com sinopse e lista de capítulos" /> |
-| **Leitor de capítulos** | **Busca rápida (Ctrl+K)** |
-| <img src="docs/screenshots/leitor.png" alt="Leitor com páginas em rolagem vertical" /> | <img src="docs/screenshots/busca-rapida.png" alt="Janela de busca rápida com resultados" /> |
-
-<p align="center">
-  <img src="docs/screenshots/celular.png" alt="Página inicial no celular" width="260" />
-</p>
+<sub>As capas que aparecem nas imagens pertencem aos respectivos autores e editoras e foram usadas apenas para demonstrar a interface.</sub>
 
 ## 🛠️ Tecnologias utilizadas
 
