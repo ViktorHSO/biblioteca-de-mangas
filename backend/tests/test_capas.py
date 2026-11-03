@@ -77,3 +77,20 @@ def test_formulario_pode_reenviar_a_capa_enviada(client, auth, criar_manga):
 def test_capa_de_manga_inexistente(client, auth):
     assert enviar(client, 999, PNG, auth).status_code == 404
 
+
+def test_importar_capas_pelo_nome_do_arquivo(client, criar_manga, tmp_path, monkeypatch, capsys):
+    from app import importar_capas
+
+    manga = criar_manga(titulo="El Sentido Absoluto de la Espada")
+    criar_manga(titulo="Outro Mangá")
+    (tmp_path / "el sentido  absoluto de la espada.webp").write_bytes(WEBP)
+    (tmp_path / "sem dono.png").write_bytes(PNG)
+    (tmp_path / "notas.txt").write_text("ignorar")
+
+    monkeypatch.setattr("sys.argv", ["importar_capas", str(tmp_path)])
+    assert importar_capas.main() == 0
+    saida = capsys.readouterr().out
+    assert "1 de 2 imagens" in saida and "sem dono.png" in saida
+
+    caminho = client.get(f"/mangas/{manga['id']}").json()["capa_url"]
+    assert caminho.endswith(".webp") and arquivo_da_capa(caminho).exists()
