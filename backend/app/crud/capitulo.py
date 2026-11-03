@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.models.capitulo import Capitulo
 from app.models.manga import Manga
+from app.core.uploads import remover_imagens
 from app.models.pagina import Pagina
 from app.schemas.capitulo import CapituloCreate, CapituloUpdate
 
@@ -67,10 +68,13 @@ def _marcar_manga_atualizado(db: Session, manga_id: int):
     db.execute(update(Manga).where(Manga.id == manga_id).values(atualizado_em=func.now()))
 
 
-def _definir_paginas(db: Session, capitulo: Capitulo, urls: list[str]):
+def _definir_paginas(db: Session, capitulo: Capitulo, urls: list[str]) -> list[str]:
+    """Troca as páginas e devolve as imagens que saíram do capítulo (para apagar depois do commit)."""
+    removidas = [p.imagem_url for p in capitulo.paginas if p.imagem_url not in urls]
     capitulo.paginas.clear()
     db.flush()  # remove as antigas antes de inserir as novas (a ordem é única por capítulo)
     capitulo.paginas.extend(Pagina(ordem=i, imagem_url=url) for i, url in enumerate(urls, start=1))
+    return removidas
 
 
 def create_capitulo(db: Session, capitulo: CapituloCreate):
@@ -88,16 +92,27 @@ def create_capitulo(db: Session, capitulo: CapituloCreate):
 def update_capitulo(db: Session, capitulo: Capitulo, dados: CapituloUpdate):
     for campo, valor in dados.model_dump(exclude={"paginas"}).items():
         setattr(capitulo, campo, valor)
-    if dados.paginas is not None:
-        _definir_paginas(db, capitulo, dados.paginas)
+    removidas = _definir_paginas(db, capitulo, dados.paginas) if dados.paginas is not None else []
     _marcar_manga_atualizado(db, capitulo.manga_id)
     db.commit()
+    remover_imagens(*removidas)
     db.refresh(capitulo)
     return capitulo
 
 
 def substituir_paginas(db: Session, capitulo: Capitulo, urls: list[str]):
-    _definir_paginas(db, capitulo, urls)
+    removidas = _definir_paginas(db, capitulo, urls)
+    _marcar_manga_atualizado(db, capitulo.manga_id)
+    db.commit()
+    remover_imagens(*removidas)
+    db.refresh(capitulo)
+    return capitulo.paginas
+
+
+def adicionar_paginas(db: Session, capitulo: Capitulo, caminhos: list[str]):
+    """Acrescenta páginas no fim do capítulo, na ordem recebida."""
+    ultima = max((p.ordem for p in capitulo.paginas), default=0)
+    capitulo.paginas.extend(Pagina(ordem=ultima + i, imagem_url=c) for i, c in enumerate(caminhos, start=1))
     _marcar_manga_atualizado(db, capitulo.manga_id)
     db.commit()
     db.refresh(capitulo)
@@ -105,8 +120,10 @@ def substituir_paginas(db: Session, capitulo: Capitulo, urls: list[str]):
 
 
 def delete_capitulo(db: Session, capitulo: Capitulo):
+    imagens = [p.imagem_url for p in capitulo.paginas]
     db.delete(capitulo)
     db.commit()
+    remover_imagens(*imagens)
     return capitulo
 
 

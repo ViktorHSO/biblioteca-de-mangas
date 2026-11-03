@@ -3,7 +3,7 @@ import unicodedata
 from sqlalchemy import func, update
 from sqlalchemy.orm import Session
 
-from app.core.capas import remover_capa_local
+from app.core.uploads import remover_imagens
 from app.crud.utils import padrao_like
 from app.models.capitulo import Capitulo
 from app.models.manga import Manga
@@ -135,7 +135,7 @@ def update_manga(db: Session, manga_id: int, dados: MangaCreate):
     db.commit()
     db.refresh(manga)
     if capa_anterior != manga.capa_url:
-        remover_capa_local(capa_anterior)
+        remover_imagens(capa_anterior)
     return manga
 
 
@@ -145,7 +145,7 @@ def trocar_capa(db: Session, manga: Manga, caminho: str):
     db.commit()
     db.refresh(manga)
     if capa_anterior != caminho:
-        remover_capa_local(capa_anterior)
+        remover_imagens(capa_anterior)
     return manga
 
 
@@ -154,9 +154,11 @@ def delete_manga(db: Session, manga_id: int):
     if not manga:
         return None
 
+    # Os arquivos só são apagados depois do commit: se o banco falhar, nada se perde.
+    imagens = [manga.capa_url] + [p.imagem_url for c in manga.capitulos for p in c.paginas]
     db.delete(manga)
     db.commit()
-    remover_capa_local(manga.capa_url)
+    remover_imagens(*imagens)
     return manga
 
 

@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { criarCapitulo } from "../api/capitulos";
+import { criarCapitulo, enviarPaginas } from "../api/capitulos";
 import { buscarManga } from "../api/mangas";
 import CapituloForm from "../components/CapituloForm";
 import { FormularioEsqueleto } from "../components/Esqueleto";
 import { useToast } from "../context/useToast";
+import { mensagemDaApi } from "../utils/erros";
 import NaoEncontrado from "./NaoEncontrado";
 
 export default function NovoCapitulo() {
@@ -20,8 +21,18 @@ export default function NovoCapitulo() {
       .catch((error) => setErro(error.response?.status === 404 ? 404 : "erro"));
   }, [id]);
 
-  async function salvar(dados) {
+  async function salvar(dados, arquivos, aoProgredir) {
     const capitulo = await criarCapitulo({ ...dados, manga_id: Number(id) });
+    if (arquivos.length) {
+      try {
+        await enviarPaginas(capitulo.id, arquivos, aoProgredir);
+      } catch (error) {
+        // O capítulo já existe: em vez de repetir o cadastro, leva à edição para enviar o que faltou.
+        avisar(`Capítulo cadastrado, mas nem todas as páginas foram enviadas: ${mensagemDaApi(error, "tente novamente.")}`, "erro");
+        navigate(`/capitulo/${capitulo.id}/editar`);
+        return;
+      }
+    }
     avisar(`Capítulo ${capitulo.numero} cadastrado.`);
     navigate(`/capitulo/${capitulo.id}`);
   }

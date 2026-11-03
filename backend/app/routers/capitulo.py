@@ -1,12 +1,14 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, UploadFile, status
 from sqlalchemy.orm import Session
 
+from app.core import uploads
 from app.core.dependencias import exigir_admin
 from app.core.limitador import limitador
 from app.crud import capitulo as crud_capitulo
 from app.crud import manga as crud_manga
 from app.database import get_db
 from app.schemas.capitulo import (
+    MAXIMO_PAGINAS_POR_CAPITULO,
     CapituloCreate,
     CapituloLeitura,
     CapituloRecentePaginado,
@@ -88,6 +90,40 @@ def definir_paginas(
     """Substitui todas as páginas do capítulo pelas URLs enviadas, na ordem recebida."""
     capitulo = _capitulo_ou_404(db, capitulo_id)
     return crud_capitulo.substituir_paginas(db, capitulo, dados.urls)
+
+
+@router.post("/{capitulo_id}/paginas/arquivos", response_model=list[PaginaResponse])
+async def enviar_paginas(
+    capitulo_id: int,
+    arquivos: list[UploadFile] = File(description="Imagens JPG, PNG ou WEBP de até 10 MB cada, na ordem de leitura"),
+    db: Session = Depends(get_db),
+    _admin=Depends(exigir_admin),
+):
+    """Acrescenta imagens enviadas do computador no fim do capítulo, na ordem recebida.
+
+    Ou entram todas, ou nenhuma: se um arquivo for recusado, nada é gravado.
+    """
+    capitulo = _capitulo_ou_404(db, capitulo_id)
+    if len(arquivos) > uploads.MAXIMO_ARQUIVOS_POR_ENVIO:
+        raise HTTPException(422, f"Envie no máximo {uploads.MAXIMO_ARQUIVOS_POR_ENVIO} imagens por vez.")
+    if len(capitulo.paginas) + len(arquivos) > MAXIMO_PAGINAS_POR_CAPITULO:
+        raise HTTPException(422, f"Um capítulo pode ter no máximo {MAXIMO_PAGINAS_POR_CAPITULO} páginas.")
+
+    conteudos = []
+    for arquivo in arquivos:
+        conteudo = await arquivo.read(uploads.PAGINA.tamanho_maximo + 1)
+        try:
+            uploads.validar_imagem(conteudo, uploads.PAGINA)
+        except uploads.ImagemInvalida as erro:
+            raise HTTPException(422, f"{(arquivo.filename or 'arquivo')[:100]}: {erro}") from None
+        conteudos.append(conteudo)
+
+    caminhos = [uploads.salvar_imagem(conteudo, uploads.PAGINA) for conteudo in conteudos]
+    try:
+        return crud_capitulo.adicionar_paginas(db, capitulo, caminhos)
+    except Exception:
+        uploads.remover_imagens(*caminhos)  # o banco falhou: não deixa arquivos soltos
+        raise
 
 
 @router.delete("/{capitulo_id}")

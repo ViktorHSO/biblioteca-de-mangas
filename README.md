@@ -41,12 +41,12 @@ O objetivo é praticar o desenvolvimento de uma aplicação completa, do banco d
 - ✅ Busca rápida com o atalho **Ctrl+K**, navegável pelo teclado
 - ✅ Ranking das séries mais vistas e página de lançamentos
 - ✅ Leitor de capítulos em rolagem vertical, com anterior/próximo pelas setas **← →** e progresso de leitura salvo
-- ✅ Área do administrador: cadastro, edição e exclusão de mangás e capítulos, com a capa escolhida do computador ou por link (páginas coladas uma URL por linha)
+- ✅ Área do administrador: cadastro, edição e exclusão de mangás e capítulos, com a capa e as páginas escolhidas do computador ou por link
 - ✅ Layout responsivo com menu para celular, carregamento com *skeletons* e avisos de sucesso/erro
 
 **API (FastAPI)**
 - ✅ CRUD completo de mangás e capítulos (1:N), com as páginas de imagem de cada capítulo
-- ✅ Envio de capas (JPG, PNG ou WEBP até 5 MB), com o tipo conferido pelo conteúdo do arquivo
+- ✅ Envio de capas (até 5 MB) e de páginas de capítulos (até 10 MB cada, em lotes), em JPG, PNG ou WEBP, com o tipo conferido pelo conteúdo do arquivo
 - ✅ Busca com filtros combináveis (título, autor, gênero, status, tipo), ordenação e paginação
 - ✅ Ranking por visualizações, destaques, mangás atualizados, lançamentos e lista de gêneros
 - ✅ Login de administrador com JWT: leitura pública, escrita protegida
@@ -102,7 +102,7 @@ biblioteca-de-mangas/
 │   │   ├── routers/         # rotas da API
 │   │   └── crud/            # funções de acesso ao banco
 │   ├── migrations/          # scripts SQL para atualizar um banco já existente
-│   ├── uploads/             # capas enviadas pelo site (criada sozinha, fora do Git)
+│   ├── uploads/             # capas e páginas enviadas pelo site (criada sozinha, fora do Git)
 │   ├── tests/               # testes automatizados (pytest)
 │   ├── .env.example         # modelo das variáveis de ambiente
 │   └── requirements.txt
@@ -171,7 +171,7 @@ Para usar como capa as imagens de uma pasta, com o nome do arquivo igual ao tít
 python -m app.importar_capas "C:\caminho\da\pasta"
 ```
 
-As capas enviadas ficam em `backend/uploads/` (fora do Git).
+As capas e páginas enviadas pelo site ficam em `backend/uploads/` (fora do Git).
 
 Rode a API:
 
@@ -239,6 +239,7 @@ Outros comandos: `npm run lint` (verifica o código) e `npm run build` (gera a v
 | POST | `/capitulos/` 🔒 | Cadastra um capítulo |
 | PUT | `/capitulos/{id}` 🔒 | Atualiza um capítulo |
 | PUT | `/capitulos/{id}/paginas` 🔒 | Define as páginas (URLs das imagens) |
+| POST | `/capitulos/{id}/paginas/arquivos` 🔒 | Envia imagens de páginas, acrescentadas no fim (`multipart/form-data`, campo `arquivos`) |
 | DELETE | `/capitulos/{id}` 🔒 | Remove um capítulo |
 | POST | `/capitulos/{id}/visualizar` | Conta uma leitura |
 
@@ -249,7 +250,7 @@ Outros comandos: `npm run lint` (verifica o código) e `npm run build` (gera a v
 - Rotas de escrita protegidas; leitura pública.
 - Validação de todos os dados de entrada (tamanhos, valores permitidos, campos extras recusados).
 - URLs de imagens aceitas só com `http`/`https`, bloqueando `javascript:` e `data:` (XSS).
-- Upload de capas só para o administrador, com limite de 5 MB conferido antes de receber o arquivo, tipo identificado pelos primeiros bytes (SVG e outros formatos recusados) e nome aleatório gerado pela API.
+- Upload de imagens só para o administrador, com limite de tamanho conferido antes de receber o arquivo, tipo identificado pelos primeiros bytes (SVG e outros formatos recusados) e nome aleatório gerado pela API. Num envio de várias páginas, ou entram todas, ou nenhuma; imagens removidas ou de capítulos excluídos são apagadas do disco.
 - Consultas via ORM (sem SQL montado à mão) e curingas `%`/`_` escapados nas buscas.
 - Limite de tentativas de login e de contagem de visualizações por IP.
 - CORS restrito às origens configuradas e cabeçalhos de segurança nas respostas.
@@ -271,7 +272,7 @@ Outros comandos: `npm run lint` (verifica o código) e `npm run build` (gera a v
 - [x] Autenticação de administrador
 - [x] Catálogo, ranking, lançamentos e busca rápida
 - [x] Upload da imagem de capa pelo computador
-- [ ] Upload das páginas dos capítulos (hoje são cadastradas por URL)
+- [x] Upload das páginas dos capítulos pelo computador
 - [ ] Contas de leitor, com progresso de leitura sincronizado entre dispositivos
 - [ ] Testes automatizados do front-end (Vitest + Testing Library)
 - [ ] Integração contínua (GitHub Actions rodando testes, lint e auditorias)

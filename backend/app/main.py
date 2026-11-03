@@ -9,7 +9,7 @@ from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
 from app import models  # noqa: F401  (registra todas as tabelas no SQLAlchemy)
-from app.core import capas
+from app.core import uploads
 from app.core.config import configuracoes
 from app.core.limitador import limitador
 from app.database import Base, engine
@@ -55,16 +55,29 @@ app.add_middleware(
 )
 
 
+# Tamanho máximo de cada envio de arquivos, com folga para os campos do formulário.
+LIMITES_DE_ENVIO = {
+    "/capa": (uploads.CAPA.tamanho_maximo + 64 * 1024, "A imagem pode ter no máximo 5 MB."),
+    "/paginas/arquivos": (
+        uploads.LIMITE_POR_ENVIO_DE_PAGINAS + 256 * 1024,
+        f"Envie no máximo {uploads.LIMITE_POR_ENVIO_DE_PAGINAS // uploads.MB} MB de páginas por vez.",
+    ),
+}
+
+
 @app.middleware("http")
 async def limitar_tamanho_do_envio(request: Request, call_next):
     # O corpo de um upload é lido antes de checar o login; por isso o tamanho é
     # conferido aqui, pelo cabeçalho, antes de qualquer byte ser recebido.
-    if request.method == "POST" and request.url.path.endswith("/capa"):
-        tamanho = request.headers.get("content-length")
-        if tamanho is None or not tamanho.isdigit():
-            return JSONResponse(status_code=411, content={"detail": "Envio sem tamanho declarado."})
-        if int(tamanho) > capas.TAMANHO_MAXIMO_BYTES + 64 * 1024:  # folga para os campos do formulário
-            return JSONResponse(status_code=413, content={"detail": "A imagem pode ter no máximo 5 MB."})
+    if request.method == "POST":
+        for final, (limite, mensagem) in LIMITES_DE_ENVIO.items():
+            if not request.url.path.endswith(final):
+                continue
+            tamanho = request.headers.get("content-length")
+            if tamanho is None or not tamanho.isdigit():
+                return JSONResponse(status_code=411, content={"detail": "Envio sem tamanho declarado."})
+            if int(tamanho) > limite:
+                return JSONResponse(status_code=413, content={"detail": mensagem})
     return await call_next(request)
 
 
@@ -88,8 +101,9 @@ app.include_router(auth_router.router)
 app.include_router(manga_router.router)
 app.include_router(capitulo_router.router)
 
-# Capas enviadas pelo computador. A pasta é criada se ainda não existir.
-capas.PASTA_CAPAS.mkdir(parents=True, exist_ok=True)
+# Imagens enviadas pelo computador (capas e páginas). As pastas são criadas se não existirem.
+for tipo in (uploads.CAPA, uploads.PAGINA):
+    tipo.diretorio.mkdir(parents=True, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=configuracoes.uploads_dir), name="uploads")
 
 
