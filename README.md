@@ -18,7 +18,15 @@
   <a href="https://github.com/ViktorHSO/biblioteca-de-mangas/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/ViktorHSO/biblioteca-de-mangas/ci.yml?branch=main&style=for-the-badge&label=CI" alt="CI" /></a>
 </p>
 
+<p align="center">
+  <a href="https://biblioteca-de-mangas.onrender.com"><b>🌐 Abrir o site</b></a>
+  &nbsp;·&nbsp;
+  <a href="https://biblioteca-de-mangas-api.onrender.com/docs"><b>📘 Documentação da API (Swagger)</b></a>
+</p>
+
 > ✅ **Projeto funcional:** a API e o site de leitura estão completos e testados. As próximas melhorias estão em [Próximos passos](#proximos-passos).
+
+> ⏳ O site e a API estão no plano gratuito do Render: se ninguém acessou nos últimos 15 minutos, a primeira visita pode levar uns 30 segundos para carregar.
 
 <p align="center">
   <img src="docs/screenshots/home.png" alt="Página inicial com banner de destaques, novos capítulos e séries em alta" width="900" />
@@ -306,7 +314,7 @@ Outros comandos: `npm run lint` (verifica o código) e `npm run build` (gera a v
 - [ ] Testes automatizados do front-end (Vitest + Testing Library)
 - [x] Integração contínua (GitHub Actions rodando os testes em SQLite e MySQL, o lint e o build)
 - [x] Docker Compose para subir banco, API e site com um comando
-- [ ] Deploy da API e do site
+- [x] Deploy da API e do site (Render + TiDB Cloud)
 
 ## 👤 Autor
 
