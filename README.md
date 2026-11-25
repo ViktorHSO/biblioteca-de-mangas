@@ -15,6 +15,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/status-funcional-brightgreen?style=for-the-badge" alt="Funcional" />
+  <a href="https://github.com/ViktorHSO/biblioteca-de-mangas/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/ViktorHSO/biblioteca-de-mangas/ci.yml?branch=main&style=for-the-badge&label=CI" alt="CI" /></a>
 </p>
 
 > ✅ **Projeto funcional:** a API e o site de leitura estão completos e testados. As próximas melhorias estão em [Próximos passos](#proximos-passos).
@@ -125,12 +126,35 @@ biblioteca-de-mangas/
 
 ## ⚙️ Como rodar o projeto
 
-### Pré-requisitos
+### Com Docker (mais rápido)
+
+Com o [Docker](https://www.docker.com/) instalado, um comando sobe o MySQL, a API e o site:
+
+```bash
+copy .env.example .env     # Windows (Mac/Linux: cp .env.example .env)
+# preencha a SECRET_KEY no .env (o comando para gerar está no próprio arquivo)
+docker compose up --build
+```
+
+- Site: `http://localhost:5173`
+- API e Swagger: `http://localhost:8000/docs`
+
+Para criar o administrador, com os containers rodando:
+
+```bash
+docker compose exec api python -m app.criar_admin
+```
+
+O banco e as imagens enviadas ficam em volumes do Docker e continuam lá depois de `docker compose down`. Para apagar tudo, use `docker compose down -v`.
+
+### Sem Docker
+
+#### Pré-requisitos
 - Python 3.12+
 - MySQL rodando localmente
 - Node.js (para o front-end)
 
-### Back-end
+#### Back-end
 
 ```bash
 cd backend
@@ -186,7 +210,7 @@ uvicorn app.main:app --reload
 
 A documentação interativa (Swagger) fica disponível em `http://127.0.0.1:8000/docs`. Para testar as rotas protegidas por lá, faça login em `POST /auth/login`, copie o `access_token` e cole no botão **Authorize**.
 
-### Testes
+#### Testes
 
 ```bash
 pip install -r requirements-dev.txt
@@ -195,7 +219,7 @@ pytest
 
 Os testes usam um banco SQLite temporário, sem tocar no MySQL.
 
-### Front-end
+#### Front-end
 
 ```bash
 cd frontend
@@ -280,7 +304,8 @@ Outros comandos: `npm run lint` (verifica o código) e `npm run build` (gera a v
 - [x] Upload das páginas dos capítulos pelo computador
 - [ ] Contas de leitor, com progresso de leitura sincronizado entre dispositivos
 - [ ] Testes automatizados do front-end (Vitest + Testing Library)
-- [ ] Integração contínua (GitHub Actions rodando testes, lint e auditorias)
+- [x] Integração contínua (GitHub Actions rodando os testes em SQLite e MySQL, o lint e o build)
+- [x] Docker Compose para subir banco, API e site com um comando
 - [ ] Deploy da API e do site
 
 ## 👤 Autor

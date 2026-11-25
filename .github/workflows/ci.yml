@@ -1,0 +1,103 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  backend:
+    name: Back-end (${{ matrix.banco }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        banco: [sqlite, mysql]
+
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: biblioteca_testes
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -proot"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements-dev.txt
+
+      - run: pip install -r requirements-dev.txt
+
+      - name: Testes com SQLite
+        if: matrix.banco == 'sqlite'
+        run: pytest
+
+      - name: Testes com MySQL
+        if: matrix.banco == 'mysql'
+        run: pytest
+        env:
+          TEST_DATABASE_URL: mysql+pymysql://root:root@127.0.0.1:3306/biblioteca_testes
+
+  frontend:
+    name: Front-end
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
+
+  docker:
+    name: Docker Compose
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cria o .env com uma chave temporária
+        run: echo "SECRET_KEY=$(python3 -c 'import secrets; print(secrets.token_urlsafe(64))')" > .env
+
+      - name: Sobe banco, API e site
+        run: docker compose up -d --build --wait
+
+      - name: Confere se a API e o site respondem
+        run: |
+          for i in $(seq 1 30); do
+            curl -fs http://localhost:8000/ && break
+            sleep 2
+          done
+          curl -fs http://localhost:8000/mangas/ > /dev/null
+          curl -fs http://localhost:5173/ | grep -q '<div id="root">'
+
+      - name: Logs em caso de erro
+        if: failure()
+        run: docker compose logs
+
+      - name: Derruba os containers
+        if: always()
+        run: docker compose down -v
