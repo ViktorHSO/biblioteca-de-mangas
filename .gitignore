@@ -12,6 +12,7 @@ frontend/dist/
 frontend/.env
 
 # Geral
+.env
 .vscode/
 .DS_Store
 # Testes e ferramentas

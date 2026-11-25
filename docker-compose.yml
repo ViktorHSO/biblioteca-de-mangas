@@ -1,0 +1,45 @@
+# Sobe o projeto inteiro com um comando: docker compose up --build
+# Antes, copie o .env.example da raiz para .env e preencha a SECRET_KEY.
+services:
+  db:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: biblioteca_mangas
+      MYSQL_USER: usuario_app
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-senha_app_local}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-senha_root_local}
+    volumes:
+      - dados_mysql:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-senha_root_local}"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  api:
+    build: ./backend
+    environment:
+      DATABASE_URL: mysql+pymysql://usuario_app:${MYSQL_PASSWORD:-senha_app_local}@db:3306/biblioteca_mangas
+      SECRET_KEY: ${SECRET_KEY:?Defina a SECRET_KEY no arquivo .env da raiz do projeto}
+      CORS_ORIGINS: http://localhost:5173,http://127.0.0.1:5173
+    volumes:
+      - uploads:/app/uploads
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: http://localhost:8000
+    ports:
+      - "5173:80"
+    depends_on:
+      - api
+
+volumes:
+  dados_mysql:
+  uploads:
