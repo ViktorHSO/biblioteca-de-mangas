@@ -61,6 +61,7 @@ O objetivo é praticar o desenvolvimento de uma aplicação completa, do banco d
 - ✅ Título e sinopse traduzíveis por mangá e gêneros traduzidos automaticamente, no idioma do cabeçalho `Accept-Language`
 - ✅ Ranking por visualizações, destaques, mangás atualizados, lançamentos e lista de gêneros
 - ✅ Login de administrador com JWT: leitura pública, escrita protegida
+- ✅ Servidor **MCP** em `/mcp` ([fastapi-mcp](https://github.com/tadata-org/fastapi_mcp)): assistentes de IA compatíveis podem consultar o catálogo e cadastrar mangás e capítulos
 - ✅ Testes automatizados com pytest (SQLite e MySQL/MariaDB)
 - ✅ Documentação automática via Swagger
 
@@ -93,6 +94,7 @@ O objetivo é praticar o desenvolvimento de uma aplicação completa, do banco d
 - [MySQL](https://www.mysql.com/) (banco de dados)
 - [PyJWT](https://pyjwt.readthedocs.io/) + [bcrypt](https://pypi.org/project/bcrypt/) (autenticação)
 - [SlowAPI](https://slowapi.readthedocs.io/) (limite de requisições)
+- [fastapi-mcp](https://github.com/tadata-org/fastapi_mcp) (servidor MCP a partir das rotas da API)
 - [pytest](https://docs.pytest.org/) (testes)
 
 **Front-end**
@@ -110,6 +112,7 @@ biblioteca-de-mangas/
 ├── backend/
 │   ├── app/
 │   │   ├── main.py          # ponto de entrada da API
+│   │   ├── mcp.py           # servidor MCP (ferramentas expostas e autenticação)
 │   │   ├── database.py      # conexão com o MySQL
 │   │   ├── criar_admin.py   # script para criar o administrador
 │   │   ├── core/            # configurações, segurança (JWT/bcrypt) e rate limit
@@ -269,6 +272,7 @@ Outros comandos: `npm run lint` (verifica o código) e `npm run build` (gera a v
 | GET | `/mangas/atualizados` | Mangás com capítulo novo, com os 2 últimos capítulos |
 | GET | `/mangas/generos` | Lista de gêneros cadastrados |
 | GET | `/mangas/{id}` | Mangá com a lista de capítulos |
+| GET | `/mangas/{id}/edicao` 🔒 | Mangá como foi cadastrado (texto original + traduções) |
 | POST | `/mangas/` 🔒 | Cadastra um mangá |
 | PUT | `/mangas/{id}` 🔒 | Atualiza um mangá |
 | POST | `/mangas/{id}/capa` 🔒 | Envia a imagem da capa (`multipart/form-data`, campo `arquivo`) |
@@ -284,10 +288,31 @@ Outros comandos: `npm run lint` (verifica o código) e `npm run build` (gera a v
 | DELETE | `/capitulos/{id}` 🔒 | Remove um capítulo |
 | POST | `/capitulos/{id}/visualizar` | Conta uma leitura |
 
+## 🤖 Servidor MCP
+
+A API também é um servidor [MCP](https://modelcontextprotocol.io) (Model Context Protocol), montado em `/mcp` com o [fastapi-mcp](https://github.com/tadata-org/fastapi_mcp). Com ele, um assistente de IA compatível (como o Claude) chama as rotas da API como ferramentas, com os mesmos schemas e validações do Swagger.
+
+**Ferramentas expostas**
+
+| Consulta | Cadastro e edição |
+|---|---|
+| `listar_mangas`, `buscar_manga`, `dados_do_manga_para_edicao`, `listar_generos`, `listar_capitulos_do_manga`, `buscar_capitulo` | `criar_manga`, `atualizar_manga`, `criar_capitulo`, `atualizar_capitulo`, `definir_paginas_do_capitulo` |
+
+Ficam de fora o login, as exclusões, os envios de arquivo e os contadores de visualização. Capas e páginas entram por link.
+
+**Como ligar**
+
+1. Gere uma chave: `python -c "import secrets; print(secrets.token_urlsafe(48))"`
+2. Defina a variável `MCP_API_KEY` na API (arquivo `backend/.env`, ou *Environment* no Render). Sem ela, o `/mcp` não existe.
+3. No cliente MCP, use o endereço `https://<sua-api>/mcp` com o cabeçalho `Authorization: Bearer <MCP_API_KEY>`. No Claude: *Customize > Connectors > Add > Custom > Web*, e a chave em *Request headers*.
+
+A chave dá acesso de administrador às ferramentas de escrita, então trate-a como uma senha. Para revogar, troque o valor da variável.
+
 ## 🔐 Segurança
 
 **API**
 - Senhas guardadas apenas como hash **bcrypt**; login com token **JWT** assinado e com expiração.
+- Servidor MCP desligado por padrão; quando ligado, exige uma chave própria (comparada em tempo constante) e expõe só uma lista fechada de rotas, sem exclusões.
 - Rotas de escrita protegidas; leitura pública.
 - Validação de todos os dados de entrada (tamanhos, valores permitidos, campos extras recusados).
 - URLs de imagens aceitas só com `http`/`https`, bloqueando `javascript:` e `data:` (XSS).
@@ -319,6 +344,8 @@ Outros comandos: `npm run lint` (verifica o código) e `npm run build` (gera a v
 - [x] Integração contínua (GitHub Actions rodando os testes em SQLite e MySQL, o lint e o build)
 - [x] Docker Compose para subir banco, API e site com um comando
 - [x] Deploy da API e do site (Render + TiDB Cloud)
+- [x] Site em português, inglês e espanhol
+- [x] Servidor MCP para cadastrar pelo assistente de IA
 
 ## 👤 Autor
 
