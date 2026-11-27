@@ -150,3 +150,21 @@ def test_limite_de_paginas_no_cadastro(client, auth, criar_manga):
     manga = criar_manga()
     corpo = {"manga_id": manga["id"], "numero": 1, "paginas": ["https://a.com/p.jpg"] * 301}
     assert client.post("/capitulos/", json=corpo, headers=auth).status_code == 422
+
+
+def test_credito_da_traducao(client, auth, criar_manga, criar_capitulo):
+    manga = criar_manga()
+    capitulo = criar_capitulo(
+        manga["id"], 1, traducao_por="Olympus Scanlation", traducao_url="https://olympusxyz.com/"
+    )
+    assert capitulo["traducao_por"] == "Olympus Scanlation"
+    leitura = client.get(f"/capitulos/{capitulo['id']}").json()
+    assert leitura["traducao_url"] == "https://olympusxyz.com/"
+    assert client.get(f"/mangas/{manga['id']}").json()["capitulos"][0]["traducao_por"] == "Olympus Scanlation"
+
+    # Sem crédito, os campos ficam vazios; link inválido é recusado.
+    assert criar_capitulo(manga["id"], 2, traducao_por="", traducao_url="")["traducao_url"] is None
+    resposta = client.post(
+        "/capitulos/", json={"manga_id": manga["id"], "numero": 3, "traducao_url": "javascript:alert(1)"}, headers=auth
+    )
+    assert resposta.status_code == 422

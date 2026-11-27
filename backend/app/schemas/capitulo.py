@@ -3,7 +3,7 @@ from typing import Annotated
 
 from pydantic import AliasChoices, BaseModel, ConfigDict, Field
 
-from app.schemas.comum import DataHoraUTC, UrlImagemObrigatoria, texto_opcional
+from app.schemas.comum import DataHoraUTC, UrlImagem, UrlImagemObrigatoria, texto_opcional
 
 MAXIMO_PAGINAS_POR_CAPITULO = 300
 
@@ -16,6 +16,10 @@ class CapituloBase(BaseModel):
     numero: int = Field(gt=0, le=100_000)
     titulo: texto_opcional(255) = None
     data_lancamento: date | None = None
+    traducao_por: texto_opcional(100) = Field(
+        default=None, description="Quem traduziu o capítulo (ex.: o nome do grupo de scanlation)"
+    )
+    traducao_url: UrlImagem = Field(default=None, description="Link do site de quem traduziu (http ou https)")
 
 
 class CapituloCreate(CapituloBase):
@@ -64,6 +68,8 @@ class CapituloResumo(BaseModel):
     numero: int
     titulo: str | None = None
     data_lancamento: date | None = None
+    traducao_por: str | None = None
+    traducao_url: str | None = None
     visualizacoes: int
     criado_em: DataHoraUTC
 

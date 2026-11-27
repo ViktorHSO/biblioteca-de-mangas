@@ -91,6 +91,23 @@ function LeitorCapitulo({ id }) {
           {t("comum.capitulo", { numero: capitulo.numero })}
           {capitulo.titulo && <span className="text-paper/60"> — {capitulo.titulo}</span>}
         </h1>
+        {capitulo.traducao_por && (
+          <p className="text-sm text-paper/50">
+            {t("leitor.traducao")}{" "}
+            {capitulo.traducao_url ? (
+              <a
+                href={capitulo.traducao_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-paper/80 underline decoration-paper/30 underline-offset-2 hover:text-accent"
+              >
+                {capitulo.traducao_por}
+              </a>
+            ) : (
+              <span className="text-paper/80">{capitulo.traducao_por}</span>
+            )}
+          </p>
+        )}
         {logado && (
           <Link to={`/capitulo/${id}/editar`} className="inline-block pt-1 text-xs text-paper/50 hover:text-paper">
             {t("leitor.editar")}

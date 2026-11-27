@@ -59,6 +59,8 @@ export default function CapituloForm({ valoresIniciais, textoBotao, onSalvar }) 
   const [numero, setNumero] = useState(valoresIniciais?.numero ?? "");
   const [titulo, setTitulo] = useState(valoresIniciais?.titulo ?? "");
   const [dataLancamento, setDataLancamento] = useState(valoresIniciais?.data_lancamento ?? "");
+  const [traducaoPor, setTraducaoPor] = useState(valoresIniciais?.traducao_por ?? "");
+  const [traducaoUrl, setTraducaoUrl] = useState(valoresIniciais?.traducao_url ?? "");
   const [textoPaginas, setTextoPaginas] = useState(
     (valoresIniciais?.paginas ?? []).map((pagina) => pagina.imagem_url).join("\n")
   );
@@ -131,6 +133,8 @@ export default function CapituloForm({ valoresIniciais, textoBotao, onSalvar }) 
           numero: Number(numero),
           titulo: titulo.trim() || null,
           data_lancamento: dataLancamento || null,
+          traducao_por: traducaoPor.trim() || null,
+          traducao_url: traducaoUrl.trim() || null,
           paginas,
         },
         novas.map((item) => item.arquivo),
@@ -186,6 +190,28 @@ export default function CapituloForm({ valoresIniciais, textoBotao, onSalvar }) 
             type="date"
             value={dataLancamento}
             onChange={(e) => setDataLancamento(e.target.value)}
+            className={classeCampo}
+          />
+        </Campo>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Campo rotulo={t("cap.traducaoPor")} erro={erros.traducao_por} dica={t("cap.traducaoDica")}>
+          <input
+            value={traducaoPor}
+            onChange={(e) => setTraducaoPor(e.target.value)}
+            maxLength={100}
+            placeholder="Olympus Scanlation"
+            className={classeCampo}
+          />
+        </Campo>
+        <Campo rotulo={t("cap.traducaoUrl")} erro={erros.traducao_url}>
+          <input
+            type="url"
+            value={traducaoUrl}
+            onChange={(e) => setTraducaoUrl(e.target.value)}
+            maxLength={500}
+            placeholder="https://..."
             className={classeCampo}
           />
         </Campo>
