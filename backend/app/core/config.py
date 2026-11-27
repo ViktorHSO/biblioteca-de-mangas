@@ -39,6 +39,7 @@ class Configuracoes:
     cors_origins: list[str]
     rate_limit_ativo: bool
     uploads_dir: str
+    mcp_api_key: str | None
 
 
 def carregar_configuracoes() -> Configuracoes:
@@ -53,6 +54,14 @@ def carregar_configuracoes() -> Configuracoes:
     if "*" in origens:
         raise RuntimeError("CORS_ORIGINS não pode conter '*'. Liste as origens permitidas.")
 
+    # Chave do servidor MCP (/mcp). Sem ela, o MCP fica desligado.
+    mcp_api_key = os.getenv("MCP_API_KEY", "").strip() or None
+    if mcp_api_key and len(mcp_api_key) < TAMANHO_MINIMO_CHAVE:
+        raise RuntimeError(
+            f"MCP_API_KEY precisa ter pelo menos {TAMANHO_MINIMO_CHAVE} caracteres. Gere uma com: "
+            'python -c "import secrets; print(secrets.token_urlsafe(48))"'
+        )
+
     return Configuracoes(
         database_url=_obrigatoria("DATABASE_URL"),
         secret_key=secret_key,
@@ -61,6 +70,7 @@ def carregar_configuracoes() -> Configuracoes:
         cors_origins=origens,
         rate_limit_ativo=os.getenv("RATE_LIMIT_ATIVO", "true").lower() != "false",
         uploads_dir=os.getenv("UPLOADS_DIR", str(PASTA_UPLOADS_PADRAO)),
+        mcp_api_key=mcp_api_key,
     )
 
 

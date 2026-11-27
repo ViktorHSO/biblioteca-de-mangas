@@ -45,15 +45,17 @@ def capitulos_recentes(
     return {"total": total, "itens": capitulos}
 
 
-@router.get("/manga/{manga_id}", response_model=list[CapituloResponse])
+@router.get("/manga/{manga_id}", response_model=list[CapituloResponse], operation_id="listar_capitulos_do_manga")
 def listar_capitulos_do_manga(manga_id: int, db: Session = Depends(get_db)):
+    """Capítulos de um mangá, sem as páginas."""
     if not crud_manga.get_manga_by_id(db, manga_id):
         raise HTTPException(status_code=404, detail="Mangá não encontrado")
     return crud_capitulo.get_capitulos_by_manga(db, manga_id)
 
 
-@router.get("/{capitulo_id}", response_model=CapituloLeitura)
+@router.get("/{capitulo_id}", response_model=CapituloLeitura, operation_id="buscar_capitulo")
 def ler_capitulo(capitulo_id: int, db: Session = Depends(get_db)):
+    """Um capítulo com as páginas, o mangá e os capítulos anterior e seguinte."""
     capitulo = _capitulo_ou_404(db, capitulo_id)
     anterior_id, proximo_id = crud_capitulo.get_vizinhos(db, capitulo)
     dados = CapituloResponse.model_validate(capitulo).model_dump()
@@ -66,24 +68,29 @@ def ler_capitulo(capitulo_id: int, db: Session = Depends(get_db)):
     }
 
 
-@router.post("/", response_model=CapituloResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/", response_model=CapituloResponse, status_code=status.HTTP_201_CREATED, operation_id="criar_capitulo")
 def criar_capitulo(capitulo: CapituloCreate, db: Session = Depends(get_db), _admin=Depends(exigir_admin)):
+    """Cadastra um capítulo (só administrador), com as páginas por link na ordem de leitura.
+
+    O número precisa ser único dentro do mangá.
+    """
     if not crud_manga.get_manga_by_id(db, capitulo.manga_id):
         raise HTTPException(status_code=404, detail="Mangá não encontrado")
     _garantir_numero_livre(db, capitulo.manga_id, capitulo.numero)
     return crud_capitulo.create_capitulo(db, capitulo)
 
 
-@router.put("/{capitulo_id}", response_model=CapituloResponse)
+@router.put("/{capitulo_id}", response_model=CapituloResponse, operation_id="atualizar_capitulo")
 def atualizar_capitulo(
     capitulo_id: int, dados: CapituloUpdate, db: Session = Depends(get_db), _admin=Depends(exigir_admin)
 ):
+    """Atualiza número, título e data do capítulo (só administrador). Páginas omitidas são mantidas."""
     capitulo = _capitulo_ou_404(db, capitulo_id)
     _garantir_numero_livre(db, capitulo.manga_id, dados.numero, ignorar_id=capitulo.id)
     return crud_capitulo.update_capitulo(db, capitulo, dados)
 
 
-@router.put("/{capitulo_id}/paginas", response_model=list[PaginaResponse])
+@router.put("/{capitulo_id}/paginas", response_model=list[PaginaResponse], operation_id="definir_paginas_do_capitulo")
 def definir_paginas(
     capitulo_id: int, dados: PaginasUpdate, db: Session = Depends(get_db), _admin=Depends(exigir_admin)
 ):

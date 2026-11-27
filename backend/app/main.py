@@ -15,6 +15,7 @@ from app.core.idiomas import definir_idioma, idioma_do_cabecalho, restaurar_idio
 from app.core.limitador import limitador
 from app.core.migracoes import aplicar_migracoes
 from app.database import Base, engine
+from app.mcp import encerrar_mcp, montar_mcp
 from app.routers import auth as auth_router
 from app.routers import capitulo as capitulo_router
 from app.routers import manga as manga_router
@@ -36,13 +37,14 @@ async def lifespan(_app: FastAPI):
     Base.metadata.create_all(bind=engine)
     aplicar_migracoes(engine)
     yield
+    await encerrar_mcp(servidor_mcp)
 
 
 app = FastAPI(
     title="Biblioteca de Mangás",
     description="API para catalogar mangás, capítulos e páginas. "
     "Leitura pública; criação, edição e exclusão exigem login de administrador.",
-    version="1.1.0",
+    version="1.2.0",
     lifespan=lifespan,
 )
 
@@ -120,6 +122,9 @@ async def erro_inesperado(request: Request, exc: Exception):
 app.include_router(auth_router.router)
 app.include_router(manga_router.router)
 app.include_router(capitulo_router.router)
+
+# Servidor MCP em /mcp (só com MCP_API_KEY definida). Depois das rotas: ele lê o OpenAPI delas.
+servidor_mcp = montar_mcp(app)
 
 # Imagens enviadas pelo computador (capas e páginas). As pastas são criadas se não existirem.
 for tipo in (uploads.CAPA, uploads.PAGINA):

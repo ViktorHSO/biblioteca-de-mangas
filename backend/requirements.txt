@@ -1,4 +1,7 @@
 fastapi==0.141.1
+fastapi-mcp==0.4.0
+# O fastapi-mcp 0.4 não funciona com o mcp 2.x (mudou o construtor do Server).
+mcp==1.30.0
 uvicorn==0.52.1
 sqlalchemy==2.0.51
 pymysql==1.2.0

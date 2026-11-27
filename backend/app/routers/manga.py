@@ -35,7 +35,7 @@ def _buscar_ou_404(db: Session, manga_id: int):
 
 # As rotas fixas (/ranking, /destaques, /atualizados, /generos) vêm antes de /{manga_id}.
 
-@router.get("/", response_model=MangaPaginado)
+@router.get("/", response_model=MangaPaginado, operation_id="listar_mangas")
 def listar_mangas(
     titulo: str | None = Query(default=None, max_length=TAMANHO_MAXIMO_BUSCA),
     genero: str | None = Query(default=None, max_length=TAMANHO_MAXIMO_BUSCA),
@@ -47,6 +47,7 @@ def listar_mangas(
     limit: int = Query(default=20, ge=1, le=100),
     db: Session = Depends(get_db),
 ):
+    """Lista os mangás com filtros (título em qualquer idioma, gênero, autor, status, tipo), ordenação e paginação."""
     mangas, total = crud_manga.get_mangas(db, titulo, genero, status, autor, tipo, ordenar, skip, limit)
     return {"total": total, "itens": mangas}
 
@@ -77,17 +78,19 @@ def atualizados(limit: int = Query(default=12, ge=1, le=24), db: Session = Depen
     ]
 
 
-@router.get("/generos", response_model=list[str])
+@router.get("/generos", response_model=list[str], operation_id="listar_generos")
 def generos(db: Session = Depends(get_db)):
+    """Gêneros já usados no catálogo, sem repetir o mesmo gênero em idiomas diferentes."""
     return crud_manga.get_generos(db)
 
 
-@router.get("/{manga_id}", response_model=MangaDetalhe)
+@router.get("/{manga_id}", response_model=MangaDetalhe, operation_id="buscar_manga")
 def buscar_manga(manga_id: int, db: Session = Depends(get_db)):
+    """Um mangá com a lista de capítulos (do mais novo ao mais antigo)."""
     return _buscar_ou_404(db, manga_id)
 
 
-@router.get("/{manga_id}/edicao", response_model=MangaEdicao)
+@router.get("/{manga_id}/edicao", response_model=MangaEdicao, operation_id="dados_do_manga_para_edicao")
 def dados_para_edicao(manga_id: int, db: Session = Depends(get_db), _admin=Depends(exigir_admin)):
     """Mangá do jeito que foi cadastrado (texto original + traduções), para o formulário de edição."""
     manga = _buscar_ou_404(db, manga_id)
@@ -97,15 +100,26 @@ def dados_para_edicao(manga_id: int, db: Session = Depends(get_db), _admin=Depen
     )
 
 
-@router.post("/", response_model=MangaResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/", response_model=MangaResponse, status_code=status.HTTP_201_CREATED, operation_id="criar_manga")
 def criar_manga(manga: MangaCreate, db: Session = Depends(get_db), _admin=Depends(exigir_admin)):
+    """Cadastra um mangá (só administrador).
+
+    `titulo` e `sinopse` ficam no `idioma_original` (pt, en ou es); as versões nos outros
+    idiomas vão em `traducoes`. Gêneros podem ser escritos em qualquer um dos três idiomas,
+    separados por vírgula. A capa entra por link em `capa_url`.
+    """
     return crud_manga.create_manga(db, manga)
 
 
-@router.put("/{manga_id}", response_model=MangaResponse)
+@router.put("/{manga_id}", response_model=MangaResponse, operation_id="atualizar_manga")
 def atualizar_manga(
     manga_id: int, manga: MangaCreate, db: Session = Depends(get_db), _admin=Depends(exigir_admin)
 ):
+    """Substitui todos os dados do mangá (só administrador).
+
+    Campos omitidos voltam ao valor padrão: envie o mangá completo, partindo de
+    `dados_do_manga_para_edicao`. Se `traducoes` for omitido, as traduções atuais são mantidas.
+    """
     manga_atualizado = crud_manga.update_manga(db, manga_id, manga)
     if not manga_atualizado:
         raise HTTPException(status_code=404, detail="Mangá não encontrado")
