@@ -1,16 +1,18 @@
 import { useCallback, useState } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
+import { useIdioma } from "../context/useIdioma";
 import { useToast } from "../context/useToast";
 import useAtalhoBusca from "../hooks/useAtalhoBusca";
 import BuscaRapida from "./BuscaRapida";
 import IconeLupa from "./IconeLupa";
+import SeletorIdioma from "./SeletorIdioma";
 
 const LINKS = [
-  { para: "/", texto: "Início" },
-  { para: "/series", texto: "Séries" },
-  { para: "/ranking", texto: "Ranking" },
-  { para: "/capitulos", texto: "Lançamentos" },
+  { para: "/", chave: "nav.inicio" },
+  { para: "/series", chave: "nav.series" },
+  { para: "/ranking", chave: "nav.ranking" },
+  { para: "/capitulos", chave: "nav.lancamentos" },
 ];
 
 function classeDoLink({ isActive }) {
@@ -24,6 +26,7 @@ function classeDoLinkMobile({ isActive }) {
 export default function Header() {
   const { usuario, logado, logout } = useAuth();
   const { avisar } = useToast();
+  const { t } = useIdioma();
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const [buscaAberta, setBuscaAberta] = useState(false);
@@ -39,7 +42,7 @@ export default function Header() {
   function sair() {
     logout();
     fecharMenu();
-    avisar("Você saiu da conta.");
+    avisar(t("header.saiu"));
     navigate("/");
   }
 
@@ -48,12 +51,12 @@ export default function Header() {
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-6 px-4 md:px-6">
         <div className="flex items-center gap-8">
           <Link to="/" className="font-display text-xl text-paper">
-            Biblioteca <span className="text-accent">de Mangás</span>
+            {t("marca.inicio")} <span className="text-accent">{t("marca.destaque")}</span>
           </Link>
-          <nav className="hidden items-center gap-5 md:flex" aria-label="Principal">
+          <nav className="hidden items-center gap-5 md:flex" aria-label={t("nav.principal")}>
             {LINKS.map((link) => (
               <NavLink key={link.para} to={link.para} end={link.para === "/"} className={classeDoLink}>
-                {link.texto}
+                {t(link.chave)}
               </NavLink>
             ))}
           </nav>
@@ -63,13 +66,15 @@ export default function Header() {
           <button
             type="button"
             onClick={abrirBusca}
-            aria-label="Buscar (Ctrl+K)"
+            aria-label={t("header.buscarAtalho")}
             className="flex items-center gap-2 rounded-md border border-white/10 px-2.5 py-1.5 text-sm text-paper/60 transition-colors hover:border-accent hover:text-paper"
           >
             <IconeLupa />
-            <span className="hidden lg:inline">Buscar</span>
+            <span className="hidden lg:inline">{t("header.buscar")}</span>
             <kbd className="hidden rounded border border-white/10 px-1 text-[10px] text-paper/40 lg:inline">Ctrl K</kbd>
           </button>
+
+          <SeletorIdioma />
 
           <div className="hidden items-center gap-3 md:flex">
             {logado ? (
@@ -78,16 +83,16 @@ export default function Header() {
                   to="/novo"
                   className="rounded-md bg-accent px-3 py-1.5 text-sm font-semibold text-base transition-opacity hover:opacity-90"
                 >
-                  + Novo mangá
+                  {t("header.novoManga")}
                 </Link>
                 <span className="text-sm text-paper/60">{usuario.usuario}</span>
                 <button type="button" onClick={sair} className="text-sm text-paper/70 transition-colors hover:text-paper">
-                  Sair
+                  {t("header.sair")}
                 </button>
               </>
             ) : (
               <Link to="/login" className="text-sm text-paper/70 transition-colors hover:text-paper">
-                Entrar
+                {t("header.entrar")}
               </Link>
             )}
           </div>
@@ -95,7 +100,7 @@ export default function Header() {
           <button
             type="button"
             onClick={() => setMenuAbertoEm(menuAberto ? null : pathname)}
-            aria-label={menuAberto ? "Fechar menu" : "Abrir menu"}
+            aria-label={menuAberto ? t("header.fecharMenu") : t("header.abrirMenu")}
             aria-expanded={menuAberto}
             aria-controls="menu-celular"
             className="rounded-md border border-white/10 p-1.5 text-paper/70 md:hidden"
@@ -108,25 +113,25 @@ export default function Header() {
       </div>
 
       {menuAberto && (
-        <nav id="menu-celular" aria-label="Menu" className="space-y-1 border-t border-white/5 px-4 py-3 md:hidden">
+        <nav id="menu-celular" aria-label={t("nav.menu")} className="space-y-1 border-t border-white/5 px-4 py-3 md:hidden">
           {LINKS.map((link) => (
             <NavLink key={link.para} to={link.para} end={link.para === "/"} className={classeDoLinkMobile} onClick={fecharMenu}>
-              {link.texto}
+              {t(link.chave)}
             </NavLink>
           ))}
           <div className="mt-2 border-t border-white/5 pt-2">
             {logado ? (
               <>
                 <NavLink to="/novo" className={classeDoLinkMobile} onClick={fecharMenu}>
-                  + Novo mangá
+                  {t("header.novoManga")}
                 </NavLink>
                 <button type="button" onClick={sair} className="block w-full rounded-md px-3 py-2 text-left text-paper/80 hover:bg-white/5">
-                  Sair ({usuario.usuario})
+                  {t("header.sairDe", { usuario: usuario.usuario })}
                 </button>
               </>
             ) : (
               <NavLink to="/login" className={classeDoLinkMobile} onClick={fecharMenu}>
-                Entrar
+                {t("header.entrar")}
               </NavLink>
             )}
           </div>

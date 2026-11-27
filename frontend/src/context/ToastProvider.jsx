@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import { ToastContext } from "./toasts";
+import { useIdioma } from "./useIdioma";
 
 const DURACAO_MS = 4000;
 
@@ -11,6 +12,7 @@ const ESTILOS = {
 export function ToastProvider({ children }) {
   const [avisos, setAvisos] = useState([]);
   const proximoId = useRef(0);
+  const { t } = useIdioma();
 
   const fechar = useCallback((id) => {
     setAvisos((atuais) => atuais.filter((aviso) => aviso.id !== id));
@@ -46,7 +48,7 @@ export function ToastProvider({ children }) {
             <button
               type="button"
               onClick={() => fechar(aviso.id)}
-              aria-label="Fechar aviso"
+              aria-label={t("comum.fecharAviso")}
               className="text-paper/40 hover:text-paper"
             >
               ×

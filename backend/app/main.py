@@ -11,7 +11,9 @@ from slowapi.errors import RateLimitExceeded
 from app import models  # noqa: F401  (registra todas as tabelas no SQLAlchemy)
 from app.core import uploads
 from app.core.config import configuracoes
+from app.core.idiomas import definir_idioma, idioma_do_cabecalho, restaurar_idioma
 from app.core.limitador import limitador
+from app.core.migracoes import aplicar_migracoes
 from app.database import Base, engine
 from app.routers import auth as auth_router
 from app.routers import capitulo as capitulo_router
@@ -29,9 +31,10 @@ CABECALHOS_SEGURANCA = {
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
-    # Cria as tabelas que ainda não existem. Colunas novas em tabelas antigas
-    # precisam das migrações em backend/migrations/.
+    # Cria as tabelas que ainda não existem e adiciona as colunas novas simples
+    # (app/core/migracoes.py). As demais estão em backend/migrations/.
     Base.metadata.create_all(bind=engine)
+    aplicar_migracoes(engine)
     yield
 
 
@@ -79,6 +82,23 @@ async def limitar_tamanho_do_envio(request: Request, call_next):
             if int(tamanho) > limite:
                 return JSONResponse(status_code=413, content={"detail": mensagem})
     return await call_next(request)
+
+
+@app.middleware("http")
+async def idioma_da_requisicao(request: Request, call_next):
+    # O site manda o idioma escolhido no Accept-Language; título, sinopse e gêneros
+    # voltam nesse idioma. O Vary avisa caches de que a resposta muda conforme o cabeçalho.
+    token = definir_idioma(idioma_do_cabecalho(request.headers.get("accept-language")))
+    try:
+        resposta = await call_next(request)
+    finally:
+        restaurar_idioma(token)
+    vary = resposta.headers.get("Vary")
+    if not vary:
+        resposta.headers["Vary"] = "Accept-Language"
+    elif "accept-language" not in vary.lower():
+        resposta.headers["Vary"] = f"{vary}, Accept-Language"
+    return resposta
 
 
 @app.middleware("http")

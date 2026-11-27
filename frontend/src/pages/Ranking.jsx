@@ -3,6 +3,7 @@ import { listarRanking } from "../api/mangas";
 import Capa from "../components/Capa";
 import { ListaEsqueleto } from "../components/Esqueleto";
 import StatusBadge from "../components/StatusBadge";
+import { useIdioma } from "../context/useIdioma";
 import useCarregamento from "../hooks/useCarregamento";
 import { formatarNumero } from "../utils/numero";
 
@@ -17,17 +18,18 @@ const COR_POSICAO = { 1: "text-accent", 2: "text-paper", 3: "text-[#C08457]" };
 
 export default function Ranking() {
   const { dados: mangas, erro } = useCarregamento(carregarRanking);
+  const { t } = useIdioma();
 
   return (
     <section className="space-y-6">
       <header>
-        <h1 className="font-display text-3xl text-paper">Ranking</h1>
-        <p className="mt-1 text-sm text-paper/50">As {TAMANHO_RANKING} séries mais vistas da biblioteca.</p>
+        <h1 className="font-display text-3xl text-paper">{t("ranking.titulo")}</h1>
+        <p className="mt-1 text-sm text-paper/50">{t("ranking.descricao", { n: TAMANHO_RANKING })}</p>
       </header>
 
-      {erro && <p className="text-red-400">Não foi possível carregar o ranking. A API está rodando?</p>}
+      {erro && <p className="text-red-400">{t("erro.ranking")}</p>}
       {!mangas && !erro && <ListaEsqueleto />}
-      {mangas?.length === 0 && <p className="text-paper/50">Nenhum mangá cadastrado ainda.</p>}
+      {mangas?.length === 0 && <p className="text-paper/50">{t("comum.nenhumManga")}</p>}
 
       {mangas?.length > 0 && (
         <ol className="divide-y divide-white/5 overflow-hidden rounded-md border border-white/5">
@@ -44,7 +46,7 @@ export default function Ranking() {
                 <span className="min-w-0 flex-1">
                   <span className="line-clamp-1 font-display text-paper">{manga.titulo}</span>
                   <span className="line-clamp-1 text-xs text-paper/50">
-                    <span className="capitalize">{manga.tipo}</span>
+                    <span>{t(`tipo.${manga.tipo}`)}</span>
                     {manga.genero && ` · ${manga.genero}`}
                   </span>
                 </span>
@@ -53,7 +55,7 @@ export default function Ranking() {
                 </span>
                 <span className="w-24 shrink-0 text-right text-sm text-paper/70">
                   {formatarNumero(manga.visualizacoes)}
-                  <span className="block text-[10px] uppercase tracking-wide text-paper/40">visualizações</span>
+                  <span className="block text-[10px] uppercase tracking-wide text-paper/40">{t("comum.visualizacoesRotulo")}</span>
                 </span>
               </Link>
             </li>

@@ -1,3 +1,5 @@
+import { useIdioma } from "../context/useIdioma";
+
 // Mostra a primeira, a última e as páginas vizinhas da atual: 1 … 4 5 6 … 12
 function paginasVisiveis(atual, total) {
   const paginas = new Set([1, total, atual - 1, atual, atual + 1]);
@@ -5,6 +7,7 @@ function paginasVisiveis(atual, total) {
 }
 
 export default function Paginacao({ pagina, totalPaginas, aoMudar }) {
+  const { t } = useIdioma();
   if (totalPaginas <= 1) return null;
 
   const classeBotao = "min-w-9 rounded-md border px-3 py-1.5 text-sm transition-colors";
@@ -13,14 +16,14 @@ export default function Paginacao({ pagina, totalPaginas, aoMudar }) {
 
   const paginas = paginasVisiveis(pagina, totalPaginas);
   return (
-    <nav className="flex flex-wrap items-center justify-center gap-2" aria-label="Paginação">
+    <nav className="flex flex-wrap items-center justify-center gap-2" aria-label={t("comum.paginacao")}>
       <button
         type="button"
         onClick={() => aoMudar(pagina - 1)}
         disabled={pagina === 1}
         className={`${classeBotao} ${pagina === 1 ? desativado : normal}`}
       >
-        ← Anterior
+        {t("comum.anterior")}
       </button>
 
       {paginas.map((numero, posicao) => {
@@ -46,7 +49,7 @@ export default function Paginacao({ pagina, totalPaginas, aoMudar }) {
         disabled={pagina === totalPaginas}
         className={`${classeBotao} ${pagina === totalPaginas ? desativado : normal}`}
       >
-        Próxima →
+        {t("comum.proxima")}
       </button>
     </nav>
   );

@@ -1,17 +1,17 @@
-import unicodedata
+from sqlalchemy import and_, func, or_, update
+from sqlalchemy.orm import Session, aliased
 
-from sqlalchemy import func, update
-from sqlalchemy.orm import Session
-
+from app.core.generos import chave_do_genero, nomes_equivalentes, normalizar, separar, traduzir_genero
+from app.core.idiomas import idioma_atual
 from app.core.uploads import remover_imagens
 from app.crud.utils import padrao_like
 from app.models.capitulo import Capitulo
 from app.models.manga import Manga
+from app.models.manga_traducao import MangaTraducao
 from app.schemas.manga import MangaCreate
 
 ORDENACOES = {
     "recentes": (Manga.atualizado_em.desc(), Manga.id.desc()),
-    "titulo": (Manga.titulo.asc(), Manga.id.asc()),
     "populares": (Manga.visualizacoes.desc(), Manga.id.desc()),
 }
 
@@ -30,9 +30,19 @@ def get_mangas(
     query = db.query(Manga)
 
     if titulo:
-        query = query.filter(Manga.titulo.ilike(padrao_like(titulo), escape="\\"))
+        # Acha o mangá pelo título original ou por qualquer uma das traduções.
+        padrao = padrao_like(titulo)
+        query = query.filter(
+            or_(
+                Manga.titulo.ilike(padrao, escape="\\"),
+                Manga.traducoes.any(MangaTraducao.titulo.ilike(padrao, escape="\\")),
+            )
+        )
     if genero:
-        query = query.filter(Manga.genero.ilike(padrao_like(genero), escape="\\"))
+        # "Action" também acha os cadastrados como "Ação" ou "Acción".
+        query = query.filter(
+            or_(*(Manga.genero.ilike(padrao_like(nome), escape="\\") for nome in nomes_equivalentes(genero)))
+        )
     if autor:
         query = query.filter(Manga.autor.ilike(padrao_like(autor), escape="\\"))
     if status:
@@ -41,7 +51,17 @@ def get_mangas(
         query = query.filter(Manga.tipo == tipo)
 
     total = query.count()
-    mangas = query.order_by(*ORDENACOES[ordenar]).offset(skip).limit(limit).all()
+    if ordenar == "titulo":
+        # Ordem alfabética pelo título no idioma pedido (ou o original, se não houver tradução).
+        idioma = idioma_atual()
+        traducao = aliased(MangaTraducao)
+        query = query.outerjoin(
+            traducao,
+            and_(traducao.manga_id == Manga.id, traducao.idioma == idioma, Manga.idioma_original != idioma),
+        ).order_by(func.coalesce(traducao.titulo, Manga.titulo).asc(), Manga.id.asc())
+    else:
+        query = query.order_by(*ORDENACOES[ordenar])
+    mangas = query.offset(skip).limit(limit).all()
     return mangas, total
 
 
@@ -95,28 +115,54 @@ def get_atualizados(db: Session, limit: int = 12):
 
 
 def get_generos(db: Session) -> list[str]:
-    """Lista única de gêneros, separando os que foram cadastrados juntos ("Ação, Aventura")."""
+    """Lista única de gêneros no idioma pedido, separando os cadastrados juntos ("Ação, Aventura").
+
+    "Acción" e "Ação" são o mesmo gênero e aparecem uma vez só, já traduzidos.
+    """
+    idioma = idioma_atual()
     generos: dict[str, str] = {}
     for (valor,) in db.query(Manga.genero).filter(Manga.genero.is_not(None)).distinct():
-        for genero in valor.split(","):
-            genero = genero.strip()
-            if genero:
-                generos.setdefault(genero.casefold(), genero)
-    return sorted(generos.values(), key=_chave_ordenacao)
-
-
-def _chave_ordenacao(texto: str) -> str:
-    """Ordena ignorando acentos e maiúsculas ("Ação" fica antes de "Aventura")."""
-    sem_acento = unicodedata.normalize("NFKD", texto).encode("ascii", "ignore").decode("ascii")
-    return sem_acento.casefold()
+        for genero in separar(valor):
+            chave = chave_do_genero(genero) or normalizar(genero)
+            generos.setdefault(chave, traduzir_genero(genero, idioma))
+    # Ordena ignorando acentos e maiúsculas ("Ação" fica antes de "Aventura").
+    return sorted(generos.values(), key=normalizar)
 
 
 def get_manga_by_id(db: Session, manga_id: int):
     return db.get(Manga, manga_id)
 
 
+def _aplicar_traducoes(manga: Manga, traducoes: dict | None):
+    """Atualiza as traduções no lugar (sem apagar e recriar, por causa da chave única).
+
+    Traduções vazias e a do próprio idioma original são descartadas.
+    """
+    if traducoes is None:
+        return
+    atuais = {t.idioma: t for t in manga.traducoes}
+    for idioma, dados in traducoes.items():
+        titulo, sinopse = dados.titulo, dados.sinopse
+        existente = atuais.pop(idioma, None)
+        if idioma == manga.idioma_original or not (titulo or sinopse):
+            if existente:
+                manga.traducoes.remove(existente)
+        elif existente:
+            existente.titulo, existente.sinopse = titulo, sinopse
+        else:
+            manga.traducoes.append(MangaTraducao(idioma=idioma, titulo=titulo, sinopse=sinopse))
+    # Idiomas que não vieram no envio deixam de ter tradução.
+    for sobrando in atuais.values():
+        manga.traducoes.remove(sobrando)
+
+
+def _campos_do_manga(dados: MangaCreate) -> dict:
+    return dados.model_dump(exclude={"traducoes"})
+
+
 def create_manga(db: Session, manga: MangaCreate):
-    novo_manga = Manga(**manga.model_dump())
+    novo_manga = Manga(**_campos_do_manga(manga))
+    _aplicar_traducoes(novo_manga, manga.traducoes)
     db.add(novo_manga)
     db.commit()
     db.refresh(novo_manga)
@@ -129,8 +175,14 @@ def update_manga(db: Session, manga_id: int, dados: MangaCreate):
         return None
 
     capa_anterior = manga.capa_url
-    for campo, valor in dados.model_dump().items():
+    for campo, valor in _campos_do_manga(dados).items():
         setattr(manga, campo, valor)
+    if dados.traducoes is not None:
+        _aplicar_traducoes(manga, dados.traducoes)
+    else:
+        # Sem traduções no envio, as atuais ficam; só sai a que coincidir com o novo idioma original.
+        for traducao in [t for t in manga.traducoes if t.idioma == manga.idioma_original]:
+            manga.traducoes.remove(traducao)
 
     db.commit()
     db.refresh(manga)

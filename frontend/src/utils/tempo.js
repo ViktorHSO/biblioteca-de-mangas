@@ -1,4 +1,12 @@
-const relativo = new Intl.RelativeTimeFormat("pt-BR", { numeric: "auto", style: "short" });
+import { localeAtual } from "../i18n/idioma";
+
+const formatadores = {};
+
+function relativo() {
+  const locale = localeAtual();
+  formatadores[locale] ??= new Intl.RelativeTimeFormat(locale, { numeric: "auto", style: "short" });
+  return formatadores[locale];
+}
 
 const UNIDADES = [
   ["year", 60 * 60 * 24 * 365],
@@ -13,15 +21,15 @@ export function tempoRelativo(dataIso) {
   const segundos = (new Date(dataIso).getTime() - Date.now()) / 1000;
   for (const [unidade, tamanho] of UNIDADES) {
     if (Math.abs(segundos) >= tamanho) {
-      return relativo.format(Math.round(segundos / tamanho), unidade);
+      return relativo().format(Math.round(segundos / tamanho), unidade);
     }
   }
-  return "agora";
+  return relativo().format(0, "second"); // "agora" / "now" / "ahora"
 }
 
 // Datas sem horário ("2026-10-29") são montadas no fuso local; com new Date(texto)
 // o navegador as trata como UTC e o dia pode aparecer um a menos no Brasil.
 export function formatarData(dataIso) {
   const [ano, mes, dia] = dataIso.split("-").map(Number);
-  return new Date(ano, mes - 1, dia).toLocaleDateString("pt-BR");
+  return new Date(ano, mes - 1, dia).toLocaleDateString(localeAtual());
 }

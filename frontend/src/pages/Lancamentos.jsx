@@ -4,6 +4,7 @@ import { listarLancamentos } from "../api/capitulos";
 import Capa from "../components/Capa";
 import { ListaEsqueleto } from "../components/Esqueleto";
 import Paginacao from "../components/Paginacao";
+import { useIdioma } from "../context/useIdioma";
 import useCarregamento from "../hooks/useCarregamento";
 import { tempoRelativo } from "../utils/tempo";
 import { lerPagina } from "../utils/url";
@@ -13,6 +14,7 @@ const POR_PAGINA = 30;
 export default function Lancamentos() {
   const [searchParams, setSearchParams] = useSearchParams();
   const pagina = lerPagina(searchParams);
+  const { t } = useIdioma();
 
   const { dados, erro, carregando } = useCarregamento(
     useCallback(() => listarLancamentos({ skip: (pagina - 1) * POR_PAGINA, limit: POR_PAGINA }), [pagina]),
@@ -26,13 +28,13 @@ export default function Lancamentos() {
   return (
     <section className="space-y-6">
       <header>
-        <h1 className="font-display text-3xl text-paper">Lançamentos</h1>
-        <p className="mt-1 text-sm text-paper/50">Os capítulos cadastrados mais recentemente.</p>
+        <h1 className="font-display text-3xl text-paper">{t("lancamentos.titulo")}</h1>
+        <p className="mt-1 text-sm text-paper/50">{t("lancamentos.descricao")}</p>
       </header>
 
-      {erro && <p className="text-red-400">Não foi possível carregar os lançamentos. A API está rodando?</p>}
+      {erro && <p className="text-red-400">{t("erro.lancamentos")}</p>}
       {!dados && !erro && <ListaEsqueleto />}
-      {dados?.itens.length === 0 && <p className="text-paper/50">Nenhum capítulo cadastrado ainda.</p>}
+      {dados?.itens.length === 0 && <p className="text-paper/50">{t("comum.nenhumCapitulo")}</p>}
 
       {dados?.itens.length > 0 && (
         <div className={`space-y-8 transition-opacity ${carregando ? "opacity-50" : ""}`} aria-busy={carregando}>
@@ -47,7 +49,7 @@ export default function Lancamentos() {
                     {capitulo.manga.titulo}
                   </Link>
                   <Link to={`/capitulo/${capitulo.id}`} className="line-clamp-1 text-sm text-paper/70 hover:text-accent">
-                    Capítulo {capitulo.numero}
+                    {t("comum.capitulo", { numero: capitulo.numero })}
                     {capitulo.titulo && <span className="text-paper/50"> — {capitulo.titulo}</span>}
                   </Link>
                 </div>

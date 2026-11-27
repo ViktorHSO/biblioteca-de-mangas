@@ -5,6 +5,7 @@ import { buscarManga } from "../api/mangas";
 import CapituloForm from "../components/CapituloForm";
 import { FormularioEsqueleto } from "../components/Esqueleto";
 import { useToast } from "../context/useToast";
+import { useIdioma } from "../context/useIdioma";
 import { mensagemDaApi } from "../utils/erros";
 import NaoEncontrado from "./NaoEncontrado";
 
@@ -12,6 +13,7 @@ export default function NovoCapitulo() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { avisar } = useToast();
+  const { t } = useIdioma();
   const [manga, setManga] = useState(null);
   const [erro, setErro] = useState(null);
 
@@ -28,17 +30,17 @@ export default function NovoCapitulo() {
         await enviarPaginas(capitulo.id, arquivos, aoProgredir);
       } catch (error) {
         // O capítulo já existe: em vez de repetir o cadastro, leva à edição para enviar o que faltou.
-        avisar(`Capítulo cadastrado, mas nem todas as páginas foram enviadas: ${mensagemDaApi(error, "tente novamente.")}`, "erro");
+        avisar(t("novoCap.falhaPaginas", { erro: mensagemDaApi(error, t("comum.tenteNovamente")) }), "erro");
         navigate(`/capitulo/${capitulo.id}/editar`);
         return;
       }
     }
-    avisar(`Capítulo ${capitulo.numero} cadastrado.`);
+    avisar(t("novoCap.sucesso", { numero: capitulo.numero }));
     navigate(`/capitulo/${capitulo.id}`);
   }
 
-  if (erro === 404) return <NaoEncontrado mensagem="Mangá não encontrado." />;
-  if (erro) return <p className="text-red-400">Não foi possível carregar o mangá.</p>;
+  if (erro === 404) return <NaoEncontrado mensagem={t("nao.manga")} />;
+  if (erro) return <p className="text-red-400">{t("erro.manga")}</p>;
   if (!manga) return <FormularioEsqueleto />;
 
   // Sugere o número seguinte ao maior já cadastrado (a lista vem do mais novo ao mais antigo).
@@ -50,9 +52,9 @@ export default function NovoCapitulo() {
         <Link to={`/manga/${id}`} className="text-sm text-paper/50 hover:text-paper">
           ← {manga.titulo}
         </Link>
-        <h1 className="mt-2 font-display text-3xl text-paper">Novo capítulo</h1>
+        <h1 className="mt-2 font-display text-3xl text-paper">{t("novoCap.titulo")}</h1>
       </header>
-      <CapituloForm valoresIniciais={{ numero: proximoNumero }} textoBotao="Salvar capítulo" onSalvar={salvar} />
+      <CapituloForm valoresIniciais={{ numero: proximoNumero }} textoBotao={t("novoCap.salvar")} onSalvar={salvar} />
     </section>
   );
 }

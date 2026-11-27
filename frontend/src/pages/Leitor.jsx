@@ -2,28 +2,30 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { buscarCapitulo, registrarLeitura } from "../api/capitulos";
 import { useAuth } from "../context/useAuth";
+import { useIdioma } from "../context/useIdioma";
 import { urlDaImagem } from "../utils/imagem";
 import { salvarProgresso } from "../utils/progresso";
 import { LeitorEsqueleto } from "../components/Esqueleto";
 import NaoEncontrado from "./NaoEncontrado";
 
 function NavegacaoCapitulos({ capitulo }) {
+  const { t } = useIdioma();
   const classeBotao =
     "rounded-md border border-white/10 px-3 py-1.5 text-sm text-paper/80 transition-colors hover:border-accent hover:text-accent";
   const classeDesativado = "rounded-md border border-white/5 px-3 py-1.5 text-sm text-paper/20";
 
   return (
-    <nav className="flex items-center justify-between gap-2" aria-label="Navegação entre capítulos">
+    <nav className="flex items-center justify-between gap-2" aria-label={t("leitor.navegacao")}>
       {capitulo.anterior_id ? (
-        <Link to={`/capitulo/${capitulo.anterior_id}`} className={classeBotao}>← Anterior</Link>
+        <Link to={`/capitulo/${capitulo.anterior_id}`} className={classeBotao}>{t("comum.anterior")}</Link>
       ) : (
-        <span className={classeDesativado}>← Anterior</span>
+        <span className={classeDesativado}>{t("comum.anterior")}</span>
       )}
-      <Link to={`/manga/${capitulo.manga_id}`} className={classeBotao}>Capítulos</Link>
+      <Link to={`/manga/${capitulo.manga_id}`} className={classeBotao}>{t("leitor.capitulos")}</Link>
       {capitulo.proximo_id ? (
-        <Link to={`/capitulo/${capitulo.proximo_id}`} className={classeBotao}>Próximo →</Link>
+        <Link to={`/capitulo/${capitulo.proximo_id}`} className={classeBotao}>{t("comum.proximo")}</Link>
       ) : (
-        <span className={classeDesativado}>Próximo →</span>
+        <span className={classeDesativado}>{t("comum.proximo")}</span>
       )}
     </nav>
   );
@@ -39,6 +41,7 @@ export default function Leitor() {
 function LeitorCapitulo({ id }) {
   const navigate = useNavigate();
   const { logado } = useAuth();
+  const { idioma, t } = useIdioma();
   const [capitulo, setCapitulo] = useState(null);
   const [erro, setErro] = useState(null);
   const leituraContada = useRef(null);
@@ -58,7 +61,7 @@ function LeitorCapitulo({ id }) {
       leituraContada.current = id;
       registrarLeitura(id).catch(() => {});
     }
-  }, [id]);
+  }, [id, idioma]);
 
   // Setas ← e → trocam de capítulo, exceto quando o foco está num campo de texto.
   useEffect(() => {
@@ -74,8 +77,8 @@ function LeitorCapitulo({ id }) {
     return () => window.removeEventListener("keydown", aoApertarTecla);
   }, [capitulo, navigate]);
 
-  if (erro === 404) return <NaoEncontrado mensagem="Capítulo não encontrado." />;
-  if (erro) return <p className="text-red-400">Não foi possível carregar o capítulo. A API está rodando?</p>;
+  if (erro === 404) return <NaoEncontrado mensagem={t("nao.capitulo")} />;
+  if (erro) return <p className="text-red-400">{t("erro.capitulo")} {t("erro.apiRodando")}</p>;
   if (!capitulo) return <LeitorEsqueleto />;
 
   return (
@@ -85,12 +88,12 @@ function LeitorCapitulo({ id }) {
           {capitulo.manga.titulo}
         </Link>
         <h1 className="font-display text-3xl text-paper">
-          Capítulo {capitulo.numero}
+          {t("comum.capitulo", { numero: capitulo.numero })}
           {capitulo.titulo && <span className="text-paper/60"> — {capitulo.titulo}</span>}
         </h1>
         {logado && (
           <Link to={`/capitulo/${id}/editar`} className="inline-block pt-1 text-xs text-paper/50 hover:text-paper">
-            Editar capítulo
+            {t("leitor.editar")}
           </Link>
         )}
       </header>
@@ -100,14 +103,14 @@ function LeitorCapitulo({ id }) {
       </div>
 
       {capitulo.paginas.length === 0 ? (
-        <p className="py-16 text-center text-paper/50">Este capítulo ainda não tem páginas cadastradas.</p>
+        <p className="py-16 text-center text-paper/50">{t("leitor.semPaginas")}</p>
       ) : (
         <div className="flex flex-col items-center">
           {capitulo.paginas.map((pagina) => (
             <img
               key={pagina.id}
               src={urlDaImagem(pagina.imagem_url)}
-              alt={`Página ${pagina.ordem}`}
+              alt={t("comum.pagina", { numero: pagina.ordem })}
               loading="lazy"
               referrerPolicy="no-referrer"
               className="block w-full"
@@ -118,7 +121,7 @@ function LeitorCapitulo({ id }) {
 
       <div className="mt-8">
         <NavegacaoCapitulos capitulo={capitulo} />
-        <p className="mt-3 text-center text-xs text-paper/30">Dica: use as setas ← e → do teclado para trocar de capítulo.</p>
+        <p className="mt-3 text-center text-xs text-paper/30">{t("leitor.dica")}</p>
       </div>
     </article>
   );

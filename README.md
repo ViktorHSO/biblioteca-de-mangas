@@ -51,12 +51,14 @@ O objetivo é praticar o desenvolvimento de uma aplicação completa, do banco d
 - ✅ Ranking das séries mais vistas e página de lançamentos
 - ✅ Leitor de capítulos em rolagem vertical, com anterior/próximo pelas setas **← →** e progresso de leitura salvo
 - ✅ Área do administrador: cadastro, edição e exclusão de mangás e capítulos, com a capa e as páginas escolhidas do computador ou por link
+- ✅ Site em **português, inglês e espanhol**: seletor de idioma no cabeçalho (a escolha fica salva no navegador)
 - ✅ Layout responsivo com menu para celular, carregamento com *skeletons* e avisos de sucesso/erro
 
 **API (FastAPI)**
 - ✅ CRUD completo de mangás e capítulos (1:N), com as páginas de imagem de cada capítulo
 - ✅ Envio de capas (até 5 MB) e de páginas de capítulos (até 10 MB cada, em lotes), em JPG, PNG ou WEBP, com o tipo conferido pelo conteúdo do arquivo
 - ✅ Busca com filtros combináveis (título, autor, gênero, status, tipo), ordenação e paginação
+- ✅ Título e sinopse traduzíveis por mangá e gêneros traduzidos automaticamente, no idioma do cabeçalho `Accept-Language`
 - ✅ Ranking por visualizações, destaques, mangás atualizados, lançamentos e lista de gêneros
 - ✅ Login de administrador com JWT: leitura pública, escrita protegida
 - ✅ Testes automatizados com pytest (SQLite e MySQL/MariaDB)
@@ -195,6 +197,8 @@ python -c "import secrets; print(secrets.token_urlsafe(64))"
 > A API não inicia sem uma `SECRET_KEY` segura. O arquivo `.env` fica fora do Git.
 
 Se o banco já existia antes desta versão, rode o script `backend/migrations/001_estilo_olympus_e_admin.sql` (ele só adiciona colunas e tabelas, sem apagar dados).
+
+As traduções (`002_traducoes.sql`) são aplicadas sozinhas quando a API inicia: a tabela `manga_traducoes` é criada e os mangás já cadastrados ficam marcados como escritos em espanhol. O script existe para quem preferir rodar à mão.
 
 Crie o administrador (a senha é digitada sem aparecer na tela):
 
