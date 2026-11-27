@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { useIdioma } from "../../context/useIdioma";
 import { urlDaImagem } from "../../utils/imagem";
 import Capa from "../Capa";
 
@@ -12,6 +13,7 @@ function prefereMenosMovimento() {
 export default function CarrosselDestaques({ mangas }) {
   const [indice, setIndice] = useState(0);
   const [pausado, setPausado] = useState(false);
+  const { t } = useIdioma();
   const total = mangas.length;
 
   // Avança sozinho, exceto com o mouse/foco no banner ou se o sistema pede menos animação.
@@ -29,8 +31,8 @@ export default function CarrosselDestaques({ mangas }) {
 
   return (
     <section
-      aria-roledescription="carrossel"
-      aria-label="Destaques"
+      aria-roledescription={t("carrossel.descricao")}
+      aria-label={t("carrossel.rotulo")}
       className="relative overflow-hidden rounded-lg border border-white/5 bg-surface"
       onMouseEnter={() => setPausado(true)}
       onMouseLeave={() => setPausado(false)}
@@ -51,7 +53,9 @@ export default function CarrosselDestaques({ mangas }) {
         <Capa manga={manga} className="hidden aspect-[3/4] w-40 shrink-0 rounded-md shadow-2xl sm:block md:w-48" />
 
         <div className="min-w-0 space-y-3" aria-live={pausado ? "polite" : "off"}>
-          <p className="text-xs font-semibold uppercase tracking-widest text-accent">Destaque · {manga.tipo}</p>
+          <p className="text-xs font-semibold uppercase tracking-widest text-accent">
+            {t("carrossel.destaque")} · {t(`tipo.${manga.tipo}`)}
+          </p>
           <h2 className="font-display text-3xl leading-tight text-paper md:text-4xl">{manga.titulo}</h2>
           {generos.length > 0 && (
             <ul className="flex flex-wrap gap-2">
@@ -67,7 +71,7 @@ export default function CarrosselDestaques({ mangas }) {
             to={`/manga/${manga.id}`}
             className="inline-block rounded-md bg-accent px-4 py-2 text-sm font-semibold text-base transition-opacity hover:opacity-90"
           >
-            Ver mangá
+            {t("carrossel.verManga")}
           </Link>
         </div>
       </div>
@@ -77,7 +81,7 @@ export default function CarrosselDestaques({ mangas }) {
           <button
             type="button"
             onClick={() => irPara(indice - 1)}
-            aria-label="Destaque anterior"
+            aria-label={t("carrossel.anterior")}
             className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-black/40 px-3 py-1.5 text-paper/80 hover:text-accent"
           >
             ‹
@@ -85,7 +89,7 @@ export default function CarrosselDestaques({ mangas }) {
           <button
             type="button"
             onClick={() => irPara(indice + 1)}
-            aria-label="Próximo destaque"
+            aria-label={t("carrossel.proximo")}
             className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-black/40 px-3 py-1.5 text-paper/80 hover:text-accent"
           >
             ›
@@ -96,7 +100,7 @@ export default function CarrosselDestaques({ mangas }) {
                 key={item.id}
                 type="button"
                 onClick={() => irPara(posicao)}
-                aria-label={`Ir para o destaque ${posicao + 1}`}
+                aria-label={t("carrossel.irPara", { n: posicao + 1 })}
                 aria-current={posicao === indice % total}
                 className={`h-2 rounded-full transition-all ${posicao === indice % total ? "w-6 bg-accent" : "w-2 bg-paper/30"}`}
               />

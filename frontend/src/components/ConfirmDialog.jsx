@@ -1,7 +1,9 @@
 import { useEffect, useRef } from "react";
+import { useIdioma } from "../context/useIdioma";
 
 export default function ConfirmDialog({ aberto, titulo, mensagem, textoConfirmar, onConfirmar, onCancelar }) {
   const dialogRef = useRef(null);
+  const { t } = useIdioma();
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -23,7 +25,7 @@ export default function ConfirmDialog({ aberto, titulo, mensagem, textoConfirmar
           onClick={onCancelar}
           className="rounded-md px-4 py-2 text-sm text-paper/70 transition-colors hover:text-paper"
         >
-          Cancelar
+          {t("comum.cancelar")}
         </button>
         <button
           type="button"

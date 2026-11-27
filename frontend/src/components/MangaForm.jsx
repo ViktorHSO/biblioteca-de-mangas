@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from "react";
+import { useIdioma } from "../context/useIdioma";
+import { IDIOMAS } from "../i18n/idioma";
 import { errosDeCampo, mensagemDaApi } from "../utils/erros";
 import { classeCampo, ehUrlHttp } from "../utils/formulario";
 import { ehCapaEnviada, problemaNoArquivo, tamanhoLegivel, TIPOS_DE_CAPA, urlDaImagem } from "../utils/imagem";
@@ -14,10 +16,25 @@ const VAZIO = {
   tipo: "mangá",
   capa_url: "",
   destaque: false,
+  idioma_original: "pt",
 };
 
+// { pt: { titulo, sinopse }, en: {...}, es: {...} } sempre com os três idiomas, para os campos controlados.
+function traducoesIniciais(traducoes = {}) {
+  return Object.fromEntries(
+    IDIOMAS.map(({ codigo }) => [
+      codigo,
+      { titulo: traducoes[codigo]?.titulo ?? "", sinopse: traducoes[codigo]?.sinopse ?? "" },
+    ])
+  );
+}
+
 export default function MangaForm({ valoresIniciais, textoBotao, onSalvar }) {
-  const [form, setForm] = useState(() => ({ ...VAZIO, ...valoresIniciais }));
+  const { idioma, t } = useIdioma();
+  // Mangá novo: o idioma original sugerido é o idioma em que o site está.
+  const [form, setForm] = useState(() => ({ ...VAZIO, idioma_original: idioma, ...valoresIniciais }));
+  const [traducoes, setTraducoes] = useState(() => traducoesIniciais(valoresIniciais?.traducoes));
+  const outrosIdiomas = IDIOMAS.filter(({ codigo }) => codigo !== form.idioma_original);
   const [erros, setErros] = useState({});
   const [erroGeral, setErroGeral] = useState(null);
   const [enviando, setEnviando] = useState(false);
@@ -55,6 +72,10 @@ export default function MangaForm({ valoresIniciais, textoBotao, onSalvar }) {
     setForm((anterior) => ({ ...anterior, [name]: type === "checkbox" ? checked : value }));
   }
 
+  function alterarTraducao(codigo, campo, valor) {
+    setTraducoes((anteriores) => ({ ...anteriores, [codigo]: { ...anteriores[codigo], [campo]: valor } }));
+  }
+
   async function enviar(e) {
     e.preventDefault();
     setEnviando(true);
@@ -63,6 +84,8 @@ export default function MangaForm({ valoresIniciais, textoBotao, onSalvar }) {
     try {
       // Envia só os campos do formulário: a API recusa campos extras (id, datas etc.).
       const dados = Object.fromEntries(Object.keys(VAZIO).map((campo) => [campo, form[campo]]));
+      // Só os idiomas diferentes do original; campos vazios a API descarta.
+      dados.traducoes = Object.fromEntries(outrosIdiomas.map(({ codigo }) => [codigo, traducoes[codigo]]));
       await onSalvar(dados, arquivo);
     } catch (error) {
       const status = error.response?.status;
@@ -70,11 +93,11 @@ export default function MangaForm({ valoresIniciais, textoBotao, onSalvar }) {
         // Erro do envio da capa vem como texto; os do formulário, campo a campo.
         const mensagemDaCapa = mensagemDaApi(error, null);
         setErros(mensagemDaCapa ? { capa_url: mensagemDaCapa } : errosDeCampo(error));
-        setErroGeral("Confira os campos destacados.");
+        setErroGeral(t("form.confira"));
       } else if (status === 401) {
-        setErroGeral("Sua sessão expirou. Entre novamente para salvar.");
+        setErroGeral(t("form.sessao"));
       } else {
-        setErroGeral("Não foi possível salvar. Confira se a API está no ar.");
+        setErroGeral(t("form.naoSalvou"));
       }
     } finally {
       setEnviando(false);
@@ -88,52 +111,90 @@ export default function MangaForm({ valoresIniciais, textoBotao, onSalvar }) {
   return (
     <form onSubmit={enviar} className="grid gap-6 md:grid-cols-[1fr_180px]">
       <div className="space-y-4">
-        <Campo rotulo="Título *" erro={erros.titulo}>
+        <Campo rotulo={t("form.titulo")} erro={erros.titulo}>
           <input name="titulo" value={form.titulo} onChange={alterar} required maxLength={255} className={classeCampo} />
         </Campo>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <Campo rotulo="Autor" erro={erros.autor}>
+          <Campo rotulo={t("form.autor")} erro={erros.autor}>
             <input name="autor" value={form.autor ?? ""} onChange={alterar} maxLength={255} className={classeCampo} />
           </Campo>
-          <Campo rotulo="Gêneros" erro={erros.genero} dica="Separe por vírgula. Ex.: Ação, Aventura">
+          <Campo rotulo={t("form.generos")} erro={erros.genero} dica={t("form.generosDica")}>
             <input name="genero" value={form.genero ?? ""} onChange={alterar} maxLength={100} className={classeCampo} />
           </Campo>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <Campo rotulo="Tipo" erro={erros.tipo}>
+          <Campo rotulo={t("form.tipo")} erro={erros.tipo}>
             <select name="tipo" value={form.tipo} onChange={alterar} className={classeCampo}>
               {TIPOS.map((tipo) => (
-                <option key={tipo} value={tipo}>{tipo}</option>
+                <option key={tipo} value={tipo}>{t(`tipo.${tipo}`)}</option>
               ))}
             </select>
           </Campo>
-          <Campo rotulo="Status" erro={erros.status}>
+          <Campo rotulo={t("form.status")} erro={erros.status}>
             <select name="status" value={form.status} onChange={alterar} className={classeCampo}>
               {STATUS.map((status) => (
-                <option key={status} value={status}>{status}</option>
+                <option key={status} value={status}>{t(`status.${status}`)}</option>
               ))}
             </select>
           </Campo>
         </div>
 
-        <Campo rotulo="Sinopse" erro={erros.sinopse}>
+        <Campo rotulo={t("form.sinopse")} erro={erros.sinopse}>
           <textarea name="sinopse" value={form.sinopse ?? ""} onChange={alterar} rows={5} maxLength={5000} className={classeCampo} />
         </Campo>
 
-        <Campo rotulo="Capa" erro={erros.capa_url} dica="Imagem JPG, PNG ou WEBP de até 5 MB, ou o link de uma imagem.">
+        <Campo rotulo={t("form.idiomaOriginal")} erro={erros.idioma_original} dica={t("form.idiomaOriginalDica")}>
+          <select name="idioma_original" value={form.idioma_original} onChange={alterar} className={`${classeCampo} sm:w-1/2`}>
+            {IDIOMAS.map(({ codigo }) => (
+              <option key={codigo} value={codigo}>{t(`idioma.${codigo}`)}</option>
+            ))}
+          </select>
+        </Campo>
+
+        <fieldset className="space-y-4 rounded-md border border-white/10 p-4">
+          <legend className="px-1 text-sm text-paper/80">{t("form.traducoes")}</legend>
+          <p className="-mt-2 text-xs text-paper/40">{t("form.traducoesDica")}</p>
+          {outrosIdiomas.map(({ codigo }) => {
+            const nome = t(`idioma.${codigo}`);
+            return (
+              <div key={codigo} lang={codigo} className="space-y-3">
+                <Campo rotulo={t("form.tituloEm", { idioma: nome })} erro={erros.traducoes}>
+                  <input
+                    value={traducoes[codigo].titulo}
+                    onChange={(e) => alterarTraducao(codigo, "titulo", e.target.value)}
+                    placeholder={form.titulo}
+                    maxLength={255}
+                    className={classeCampo}
+                  />
+                </Campo>
+                <Campo rotulo={t("form.sinopseEm", { idioma: nome })}>
+                  <textarea
+                    value={traducoes[codigo].sinopse}
+                    onChange={(e) => alterarTraducao(codigo, "sinopse", e.target.value)}
+                    rows={3}
+                    maxLength={5000}
+                    className={classeCampo}
+                  />
+                </Campo>
+              </div>
+            );
+          })}
+        </fieldset>
+
+        <Campo rotulo={t("form.capa")} erro={erros.capa_url} dica={t("form.capaDica")}>
           <div className="space-y-2">
             <div className="flex flex-wrap items-center gap-3">
               <label className="cursor-pointer rounded-md border border-white/15 px-3 py-2 text-sm text-paper/80 transition-colors hover:border-accent hover:text-paper focus-within:ring-2 focus-within:ring-accent">
-                Escolher imagem do computador
+                {t("form.escolherImagem")}
                 <input type="file" accept={TIPOS_DE_CAPA.join(",")} onChange={escolherArquivo} className="sr-only" />
               </label>
               {(arquivo || capaEnviada) && (
                 <span className="flex items-center gap-2 text-sm text-paper/60">
-                  {arquivo ? `${arquivo.name} (${tamanhoLegivel(arquivo.size)})` : "Imagem enviada do computador"}
+                  {arquivo ? `${arquivo.name} (${tamanhoLegivel(arquivo.size)})` : t("form.imagemEnviada")}
                   <button type="button" onClick={removerCapa} className="text-red-400 hover:underline">
-                    Remover
+                    {t("form.remover")}
                   </button>
                 </span>
               )}
@@ -144,9 +205,9 @@ export default function MangaForm({ valoresIniciais, textoBotao, onSalvar }) {
               value={capaEnviada ? "" : form.capa_url ?? ""}
               onChange={alterar}
               disabled={Boolean(arquivo)}
-              placeholder={capaEnviada ? "Cole um link para trocar a imagem enviada" : "ou cole o link: https://..."}
+              placeholder={capaEnviada ? t("form.trocarEnviada") : t("form.colarLink")}
               maxLength={500}
-              aria-label="Link da capa"
+              aria-label={t("form.linkCapa")}
               className={`${classeCampo} disabled:opacity-40`}
             />
           </div>
@@ -154,7 +215,7 @@ export default function MangaForm({ valoresIniciais, textoBotao, onSalvar }) {
 
         <label className="flex items-center gap-2 text-sm text-paper/80">
           <input type="checkbox" name="destaque" checked={form.destaque} onChange={alterar} className="accent-accent" />
-          Mostrar em destaque na página inicial
+          {t("form.destaque")}
         </label>
 
         {erroGeral && <p className="text-sm text-red-400">{erroGeral}</p>}
@@ -164,17 +225,17 @@ export default function MangaForm({ valoresIniciais, textoBotao, onSalvar }) {
           disabled={enviando}
           className="rounded-md bg-accent px-5 py-2 font-semibold text-base transition-opacity hover:opacity-90 disabled:opacity-50"
         >
-          {enviando ? "Salvando..." : textoBotao}
+          {enviando ? t("comum.salvando") : textoBotao}
         </button>
       </div>
 
       <div className="order-first md:order-last">
-        <span className="mb-1 block text-sm text-paper/80">Pré-visualização</span>
+        <span className="mb-1 block text-sm text-paper/80">{t("form.previa")}</span>
         <div className="aspect-[3/4] overflow-hidden rounded-md border border-black/60 bg-black/40">
           {imagemDaPrevia ? (
             <img src={imagemDaPrevia} alt="" className="h-full w-full object-cover" />
           ) : (
-            <div className="flex h-full items-center justify-center text-sm text-paper/30">Sem capa</div>
+            <div className="flex h-full items-center justify-center text-sm text-paper/30">{t("comum.semCapa")}</div>
           )}
         </div>
       </div>

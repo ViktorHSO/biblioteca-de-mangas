@@ -9,6 +9,7 @@ import {
   TIPOS_DE_IMAGEM,
   urlDaImagem,
 } from "../utils/imagem";
+import { useIdioma } from "../context/useIdioma";
 import Campo from "./Campo";
 
 const MAXIMO_PAGINAS = 300;
@@ -21,28 +22,29 @@ function separarLinhas(texto) {
 }
 
 function Miniatura({ src, numero, novo, aoRemover }) {
+  const { t } = useIdioma();
   return (
     <figure className="relative overflow-hidden rounded border border-black/60 bg-black/40">
       {src ? (
         <img
           src={src}
-          alt={`Página ${numero}`}
+          alt={t("comum.pagina", { numero })}
           loading="lazy"
           referrerPolicy="no-referrer"
           className="aspect-[2/3] w-full object-cover"
         />
       ) : (
-        <div className="flex aspect-[2/3] items-center justify-center text-[10px] text-red-400">link inválido</div>
+        <div className="flex aspect-[2/3] items-center justify-center text-[10px] text-red-400">{t("cap.linkInvalido")}</div>
       )}
       <figcaption className="py-0.5 text-center text-[10px] text-paper/50">
         {numero}
-        {novo && <span className="ml-1 text-accent">novo</span>}
+        {novo && <span className="ml-1 text-accent">{t("cap.novo")}</span>}
       </figcaption>
       {aoRemover && (
         <button
           type="button"
           onClick={aoRemover}
-          aria-label={`Remover página ${numero}`}
+          aria-label={t("cap.removerPagina", { n: numero })}
           className="absolute right-0.5 top-0.5 rounded bg-black/70 px-1 text-xs text-paper/80 hover:text-red-400"
         >
           ×
@@ -53,6 +55,7 @@ function Miniatura({ src, numero, novo, aoRemover }) {
 }
 
 export default function CapituloForm({ valoresIniciais, textoBotao, onSalvar }) {
+  const { t } = useIdioma();
   const [numero, setNumero] = useState(valoresIniciais?.numero ?? "");
   const [titulo, setTitulo] = useState(valoresIniciais?.titulo ?? "");
   const [dataLancamento, setDataLancamento] = useState(valoresIniciais?.data_lancamento ?? "");
@@ -94,7 +97,7 @@ export default function CapituloForm({ valoresIniciais, textoBotao, onSalvar }) 
       return;
     }
     if (totalPaginas + escolhidos.length > MAXIMO_PAGINAS) {
-      setErros((anteriores) => ({ ...anteriores, paginas: `Um capítulo pode ter no máximo ${MAXIMO_PAGINAS} páginas.` }));
+      setErros((anteriores) => ({ ...anteriores, paginas: t("cap.maximo", { max: MAXIMO_PAGINAS }) }));
       return;
     }
 
@@ -139,13 +142,13 @@ export default function CapituloForm({ valoresIniciais, textoBotao, onSalvar }) 
         // Erros do envio das imagens vêm como texto; os do formulário, campo a campo.
         const mensagemDasImagens = mensagemDaApi(error, null);
         setErros(mensagemDasImagens ? { paginas: mensagemDasImagens } : errosDeCampo(error));
-        setErroGeral("Confira os campos destacados.");
+        setErroGeral(t("form.confira"));
       } else if (status === 409) {
         setErros({ numero: error.response.data.detail });
       } else if (status === 401) {
-        setErroGeral("Sua sessão expirou. Entre novamente para salvar.");
+        setErroGeral(t("form.sessao"));
       } else {
-        setErroGeral("Não foi possível salvar. Confira se a API está no ar.");
+        setErroGeral(t("form.naoSalvou"));
       }
     } finally {
       setEnviando(false);
@@ -154,15 +157,15 @@ export default function CapituloForm({ valoresIniciais, textoBotao, onSalvar }) 
   }
 
   const textoDoBotao = progresso
-    ? `Enviando páginas... ${progresso.enviadas} de ${progresso.total}`
+    ? t("cap.enviando", progresso)
     : enviando
-      ? "Salvando..."
+      ? t("comum.salvando")
       : textoBotao;
 
   return (
     <form onSubmit={enviar} className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-[140px_1fr_180px]">
-        <Campo rotulo="Número *" erro={erros.numero}>
+        <Campo rotulo={t("cap.numero")} erro={erros.numero}>
           <input
             type="number"
             min={1}
@@ -175,10 +178,10 @@ export default function CapituloForm({ valoresIniciais, textoBotao, onSalvar }) 
             className={classeCampo}
           />
         </Campo>
-        <Campo rotulo="Título" erro={erros.titulo}>
+        <Campo rotulo={t("cap.titulo")} erro={erros.titulo}>
           <input value={titulo} onChange={(e) => setTitulo(e.target.value)} maxLength={255} className={classeCampo} />
         </Campo>
-        <Campo rotulo="Lançamento" erro={erros.data_lancamento}>
+        <Campo rotulo={t("cap.lancamento")} erro={erros.data_lancamento}>
           <input
             type="date"
             value={dataLancamento}
@@ -189,14 +192,14 @@ export default function CapituloForm({ valoresIniciais, textoBotao, onSalvar }) 
       </div>
 
       <Campo
-        rotulo={`Páginas (${totalPaginas})`}
+        rotulo={t("cap.paginas", { n: totalPaginas })}
         erro={erros.paginas}
-        dica="Escolha as imagens do computador (ficam na ordem do nome do arquivo: 01, 02, 03...) ou cole links, um por linha. As imagens já enviadas aparecem como /uploads/...: mude as linhas de lugar para reordenar."
+        dica={t("cap.paginasDica")}
       >
         <div className="space-y-2">
           <div className="flex flex-wrap items-center gap-3">
             <label className="cursor-pointer rounded-md border border-white/15 px-3 py-2 text-sm text-paper/80 transition-colors hover:border-accent hover:text-paper focus-within:ring-2 focus-within:ring-accent">
-              Adicionar imagens do computador
+              {t("cap.adicionarImagens")}
               <input
                 type="file"
                 multiple
@@ -207,13 +210,13 @@ export default function CapituloForm({ valoresIniciais, textoBotao, onSalvar }) 
             </label>
             {novas.length > 0 && (
               <span className="text-sm text-paper/60">
-                {novas.length} {novas.length === 1 ? "imagem nova" : "imagens novas"}
+                {t("cap.imagensNovas", { n: novas.length })}
                 <button
                   type="button"
                   onClick={() => novas.forEach(removerNova)}
                   className="ml-2 text-red-400 hover:underline"
                 >
-                  Remover todas
+                  {t("cap.removerTodas")}
                 </button>
               </span>
             )}
@@ -226,8 +229,8 @@ export default function CapituloForm({ valoresIniciais, textoBotao, onSalvar }) 
             }}
             rows={6}
             spellCheck={false}
-            aria-label="Links das páginas"
-            placeholder={"ou cole os links:\nhttps://exemplo.com/capitulo-1/01.jpg\nhttps://exemplo.com/capitulo-1/02.jpg"}
+            aria-label={t("cap.links")}
+            placeholder={t("cap.placeholder")}
             className={`${classeCampo} font-mono text-xs`}
           />
         </div>

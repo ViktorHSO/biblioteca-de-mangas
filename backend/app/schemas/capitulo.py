@@ -1,7 +1,7 @@
 from datetime import date
 from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field
 
 from app.schemas.comum import DataHoraUTC, UrlImagemObrigatoria, texto_opcional
 
@@ -51,7 +51,7 @@ class MangaResumo(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
-    titulo: str
+    titulo: str = Field(validation_alias=AliasChoices("titulo_traduzido", "titulo"))
     capa_url: str | None = None
     tipo: str
     status: str | None = None

@@ -1,3 +1,5 @@
+import { useIdioma } from "../context/useIdioma";
+
 // Blocos cinza animados que ocupam o lugar do conteúdo enquanto ele carrega,
 // para a página não "pular" quando os dados chegam.
 function Bloco({ className = "" }) {
@@ -5,9 +7,10 @@ function Bloco({ className = "" }) {
 }
 
 function Carregando({ children, className = "", style }) {
+  const { t } = useIdioma();
   return (
     <div className={className} style={style} aria-busy="true">
-      <span className="sr-only" role="status">Carregando...</span>
+      <span className="sr-only" role="status">{t("comum.carregando")}</span>
       {children}
     </div>
   );

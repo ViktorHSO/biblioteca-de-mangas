@@ -1,10 +1,12 @@
 import { Link } from "react-router-dom";
+import { useIdioma } from "../../context/useIdioma";
 import { tempoRelativo } from "../../utils/tempo";
 import Capa from "../Capa";
 
 export default function NovosCapitulos({ mangas }) {
+  const { t } = useIdioma();
   if (mangas.length === 0) {
-    return <p className="text-sm text-paper/50">Nenhum capítulo cadastrado ainda.</p>;
+    return <p className="text-sm text-paper/50">{t("comum.nenhumCapitulo")}</p>;
   }
 
   return (
@@ -18,7 +20,7 @@ export default function NovosCapitulos({ mangas }) {
             <Link to={`/manga/${manga.id}`} className="line-clamp-1 font-display text-paper hover:text-accent">
               {manga.titulo}
             </Link>
-            <p className="text-[11px] uppercase tracking-wide text-paper/40">{manga.tipo}</p>
+            <p className="text-[11px] uppercase tracking-wide text-paper/40">{t(`tipo.${manga.tipo}`)}</p>
             <ul className="mt-1.5 space-y-1">
               {manga.ultimos_capitulos.map((capitulo) => (
                 <li key={capitulo.id}>
@@ -26,7 +28,7 @@ export default function NovosCapitulos({ mangas }) {
                     to={`/capitulo/${capitulo.id}`}
                     className="flex items-center justify-between gap-2 rounded-sm bg-white/5 px-2 py-1 text-xs transition-colors hover:bg-white/10"
                   >
-                    <span className="text-paper/90">Cap. {capitulo.numero}</span>
+                    <span className="text-paper/90">{t("comum.cap", { numero: capitulo.numero })}</span>
                     <span className="text-paper/40">{tempoRelativo(capitulo.criado_em)}</span>
                   </Link>
                 </li>

@@ -7,6 +7,7 @@ import ListaCapitulos from "../components/ListaCapitulos";
 import StatusBadge from "../components/StatusBadge";
 import { useAuth } from "../context/useAuth";
 import { useToast } from "../context/useToast";
+import { useIdioma } from "../context/useIdioma";
 import { urlDaImagem } from "../utils/imagem";
 import { lerProgresso } from "../utils/progresso";
 import NaoEncontrado from "./NaoEncontrado";
@@ -28,12 +29,14 @@ function PaginaManga({ id }) {
   const navigate = useNavigate();
   const { logado } = useAuth();
   const { avisar } = useToast();
+  const { idioma, t } = useIdioma();
   const [manga, setManga] = useState(null);
   const [erro, setErro] = useState(null);
   const [confirmandoExclusao, setConfirmandoExclusao] = useState(false);
   const [erroExclusao, setErroExclusao] = useState(null);
   const visualizacaoContada = useRef(null);
 
+  // Busca de novo ao trocar o idioma do site: título, sinopse e gêneros vêm traduzidos.
   useEffect(() => {
     buscarManga(id)
       .then(setManga)
@@ -45,21 +48,21 @@ function PaginaManga({ id }) {
       visualizacaoContada.current = id;
       registrarVisualizacao(id).catch(() => {});
     }
-  }, [id]);
+  }, [id, idioma]);
 
   async function excluir() {
     try {
       await excluirManga(id);
-      avisar("Mangá excluído.");
+      avisar(t("detalhe.excluido"));
       navigate("/");
     } catch {
       setConfirmandoExclusao(false);
-      setErroExclusao("Não foi possível excluir o mangá.");
+      setErroExclusao(t("detalhe.erroExcluir"));
     }
   }
 
-  if (erro === 404) return <NaoEncontrado mensagem="Mangá não encontrado." />;
-  if (erro) return <p className="text-red-400">Não foi possível carregar o mangá. A API está rodando?</p>;
+  if (erro === 404) return <NaoEncontrado mensagem={t("nao.manga")} />;
+  if (erro) return <p className="text-red-400">{t("erro.manga")} {t("erro.apiRodando")}</p>;
   if (!manga) return <DetalheEsqueleto />;
 
   const generos = separarGeneros(manga.genero);
@@ -74,22 +77,25 @@ function PaginaManga({ id }) {
       <div className="grid gap-8 md:grid-cols-[220px_1fr]">
         <div className="mx-auto aspect-[3/4] w-48 overflow-hidden rounded-md border-2 border-black/60 bg-black/40 shadow-lg md:w-full">
           {manga.capa_url ? (
-            <img src={urlDaImagem(manga.capa_url)} alt={`Capa de ${manga.titulo}`} className="h-full w-full object-cover" />
+            <img src={urlDaImagem(manga.capa_url)} alt={t("comum.capaDe", { titulo: manga.titulo })} className="h-full w-full object-cover" />
           ) : (
-            <div className="flex h-full items-center justify-center text-sm text-paper/30">Sem capa</div>
+            <div className="flex h-full items-center justify-center text-sm text-paper/30">{t("comum.semCapa")}</div>
           )}
         </div>
 
         <div className="space-y-4">
           <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-wider text-paper/50">
-            <span>{manga.tipo}</span>
+            <span>{t(`tipo.${manga.tipo}`)}</span>
             <span aria-hidden="true">•</span>
-            <span>
-              {manga.visualizacoes} {manga.visualizacoes === 1 ? "visualização" : "visualizações"}
-            </span>
+            <span>{t("comum.visualizacoes", { n: manga.visualizacoes })}</span>
           </div>
 
           <h1 className="font-display text-4xl leading-tight text-paper">{manga.titulo}</h1>
+          {manga.titulo_original && manga.titulo_original !== manga.titulo && (
+            <p lang={manga.idioma_original} className="-mt-2 text-sm text-paper/50">
+              {t("detalhe.tituloOriginal", { titulo: manga.titulo_original })}
+            </p>
+          )}
           {manga.autor && <p className="text-paper/70">{manga.autor}</p>}
 
           <div className="flex flex-wrap items-center gap-2">
@@ -109,7 +115,7 @@ function PaginaManga({ id }) {
                 to={`/capitulo/${continuar.id}`}
                 className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-base transition-opacity hover:opacity-90"
               >
-                Continuar (cap. {continuar.numero})
+                {t("detalhe.continuar", { numero: continuar.numero })}
               </Link>
             ) : (
               primeiro && (
@@ -117,7 +123,7 @@ function PaginaManga({ id }) {
                   to={`/capitulo/${primeiro.id}`}
                   className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-base transition-opacity hover:opacity-90"
                 >
-                  Ler do início
+                  {t("detalhe.lerInicio")}
                 </Link>
               )
             )}
@@ -126,7 +132,7 @@ function PaginaManga({ id }) {
                 to={`/capitulo/${ultimo.id}`}
                 className="rounded-md border border-accent px-4 py-2 text-sm font-semibold text-accent transition-colors hover:bg-accent/10"
               >
-                Último capítulo ({ultimo.numero})
+                {t("detalhe.ultimo", { numero: ultimo.numero })}
               </Link>
             )}
             {logado && (
@@ -135,20 +141,20 @@ function PaginaManga({ id }) {
                   to={`/manga/${id}/capitulos/novo`}
                   className="rounded-md border border-white/10 px-4 py-2 text-sm text-paper/80 transition-colors hover:text-paper"
                 >
-                  + Capítulo
+                  {t("detalhe.novoCapitulo")}
                 </Link>
                 <Link
                   to={`/manga/${id}/editar`}
                   className="rounded-md border border-white/10 px-4 py-2 text-sm text-paper/80 transition-colors hover:text-paper"
                 >
-                  Editar
+                  {t("comum.editar")}
                 </Link>
                 <button
                   type="button"
                   onClick={() => setConfirmandoExclusao(true)}
                   className="rounded-md border border-red-500/40 px-4 py-2 text-sm text-red-400 transition-colors hover:bg-red-500/10"
                 >
-                  Excluir
+                  {t("comum.excluir")}
                 </button>
               </>
             )}
@@ -159,16 +165,16 @@ function PaginaManga({ id }) {
 
       <section>
         <h2 className="mb-4 font-display text-2xl text-paper">
-          Capítulos <span className="text-paper/40">({capitulos.length})</span>
+          {t("detalhe.capitulos")} <span className="text-paper/40">({capitulos.length})</span>
         </h2>
         <ListaCapitulos capitulos={capitulos} capituloAtualId={continuar?.id} />
       </section>
 
       <ConfirmDialog
         aberto={confirmandoExclusao}
-        titulo="Excluir mangá?"
-        mensagem={`"${manga.titulo}" e todos os seus capítulos serão apagados. Essa ação não pode ser desfeita.`}
-        textoConfirmar="Excluir"
+        titulo={t("detalhe.excluirTitulo")}
+        mensagem={t("detalhe.excluirMensagem", { titulo: manga.titulo })}
+        textoConfirmar={t("comum.excluir")}
         onConfirmar={excluir}
         onCancelar={() => setConfirmandoExclusao(false)}
       />

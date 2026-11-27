@@ -1,9 +1,11 @@
 import { Link } from "react-router-dom";
+import { useIdioma } from "../context/useIdioma";
 import { formatarData, tempoRelativo } from "../utils/tempo";
 
 export default function ListaCapitulos({ capitulos, capituloAtualId }) {
+  const { t } = useIdioma();
   if (capitulos.length === 0) {
-    return <p className="text-sm text-paper/50">Nenhum capítulo cadastrado ainda.</p>;
+    return <p className="text-sm text-paper/50">{t("comum.nenhumCapitulo")}</p>;
   }
 
   return (
@@ -15,10 +17,10 @@ export default function ListaCapitulos({ capitulos, capituloAtualId }) {
             className="flex items-center justify-between gap-4 bg-surface/60 px-4 py-3 transition-colors hover:bg-surface"
           >
             <span className="min-w-0">
-              <span className="font-semibold text-paper">Capítulo {capitulo.numero}</span>
+              <span className="font-semibold text-paper">{t("comum.capitulo", { numero: capitulo.numero })}</span>
               {capitulo.id === capituloAtualId && (
                 <span className="ml-2 rounded-sm bg-accent/20 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-accent">
-                  Lendo
+                  {t("comum.lendo")}
                 </span>
               )}
               {capitulo.titulo && <span className="ml-2 truncate text-paper/60">— {capitulo.titulo}</span>}

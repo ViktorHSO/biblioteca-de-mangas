@@ -14,6 +14,7 @@ from app.schemas.manga import (
     MangaAtualizado,
     MangaCreate,
     MangaDetalhe,
+    MangaEdicao,
     MangaPaginado,
     MangaRanking,
     MangaResponse,
@@ -84,6 +85,16 @@ def generos(db: Session = Depends(get_db)):
 @router.get("/{manga_id}", response_model=MangaDetalhe)
 def buscar_manga(manga_id: int, db: Session = Depends(get_db)):
     return _buscar_ou_404(db, manga_id)
+
+
+@router.get("/{manga_id}/edicao", response_model=MangaEdicao)
+def dados_para_edicao(manga_id: int, db: Session = Depends(get_db), _admin=Depends(exigir_admin)):
+    """Mangá do jeito que foi cadastrado (texto original + traduções), para o formulário de edição."""
+    manga = _buscar_ou_404(db, manga_id)
+    return MangaEdicao(
+        **{campo: getattr(manga, campo) for campo in MangaEdicao.model_fields if campo != "traducoes"},
+        traducoes={t.idioma: {"titulo": t.titulo, "sinopse": t.sinopse} for t in manga.traducoes},
+    )
 
 
 @router.post("/", response_model=MangaResponse, status_code=status.HTTP_201_CREATED)

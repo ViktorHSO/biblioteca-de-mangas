@@ -1,8 +1,4 @@
-const LABELS = {
-  "quero ler": "Quero ler",
-  "lendo": "Lendo",
-  "concluído": "Concluído",
-};
+import { useIdioma } from "../context/useIdioma";
 
 const COLORS = {
   "quero ler": "bg-status-quero",
@@ -11,11 +7,12 @@ const COLORS = {
 };
 
 export default function StatusBadge({ status }) {
+  const { t } = useIdioma();
   return (
     <span
       className={`${COLORS[status] ?? "bg-status-quero"} text-base text-xs font-semibold px-2 py-1 rounded-sm inline-block shadow-md`}
     >
-      {LABELS[status] ?? status}
+      {status ? t(`status.${status}`) : null}
     </span>
   );
 }

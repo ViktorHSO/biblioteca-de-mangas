@@ -1,4 +1,5 @@
 import { URL_DA_API } from "../api/client";
+import { localeAtual, traduzir } from "../i18n/idioma";
 
 const MB = 1024 * 1024;
 
@@ -24,14 +25,14 @@ export function urlDaImagem(caminho) {
 }
 
 export function problemaNoArquivo(arquivo, limite = TAMANHO_MAXIMO_CAPA) {
-  if (!TIPOS_DE_IMAGEM.includes(arquivo.type)) return "Escolha uma imagem JPG, PNG ou WEBP.";
-  if (arquivo.size > limite) return `A imagem pode ter no máximo ${limite / MB} MB.`;
+  if (!TIPOS_DE_IMAGEM.includes(arquivo.type)) return traduzir("imagem.tipoInvalido");
+  if (arquivo.size > limite) return traduzir("imagem.grande", { mb: limite / MB });
   return null;
 }
 
 // "pagina2.jpg" antes de "pagina10.jpg": compara os números como números.
 export function compararNomes(a, b) {
-  return a.name.localeCompare(b.name, "pt-BR", { numeric: true, sensitivity: "base" });
+  return a.name.localeCompare(b.name, localeAtual(), { numeric: true, sensitivity: "base" });
 }
 
 export function tamanhoLegivel(bytes) {

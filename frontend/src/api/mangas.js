@@ -58,3 +58,9 @@ export async function excluirManga(id) {
 export async function registrarVisualizacao(id) {
   await api.post(`/mangas/${id}/visualizar`);
 }
+
+// Texto original + traduções, para o formulário de edição (só administrador).
+export async function buscarMangaParaEdicao(id) {
+  const { data } = await api.get(`/mangas/${id}/edicao`);
+  return data;
+}

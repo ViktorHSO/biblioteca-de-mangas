@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { buscarUsuarioLogado, login as loginApi } from "../api/auth";
 import { definirToken, quandoSessaoExpirar } from "../api/client";
 import { AuthContext } from "./contexto";
+import { traduzir } from "../i18n/idioma";
 import { useToast } from "./useToast";
 
 const CHAVE_TOKEN = "biblioteca:token";
@@ -39,7 +40,7 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     quandoSessaoExpirar(() => {
       logout();
-      avisar("Sua sessão expirou. Entre novamente.", "erro");
+      avisar(traduzir("comum.sessaoExpirou"), "erro");
     });
 
     const token = lerTokenSalvo();
