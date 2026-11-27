@@ -11,6 +11,9 @@ class Capitulo(Base):
     numero = Column(Integer, nullable=False)
     titulo = Column(String(255))
     data_lancamento = Column(Date, nullable=True)
+    # Crédito de quem traduziu o capítulo (ex.: o grupo de scanlation), mostrado no leitor.
+    traducao_por = Column(String(100), nullable=True)
+    traducao_url = Column(String(500), nullable=True)
     visualizacoes = Column(Integer, nullable=False, default=0, server_default="0")
     criado_em = Column(DateTime, nullable=False, server_default=func.now())
 

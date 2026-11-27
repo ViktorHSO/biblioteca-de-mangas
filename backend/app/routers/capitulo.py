@@ -72,7 +72,8 @@ def ler_capitulo(capitulo_id: int, db: Session = Depends(get_db)):
 def criar_capitulo(capitulo: CapituloCreate, db: Session = Depends(get_db), _admin=Depends(exigir_admin)):
     """Cadastra um capítulo (só administrador), com as páginas por link na ordem de leitura.
 
-    O número precisa ser único dentro do mangá.
+    O número precisa ser único dentro do mangá. `traducao_por` e `traducao_url` dão o crédito
+    a quem traduziu, mostrado no leitor.
     """
     if not crud_manga.get_manga_by_id(db, capitulo.manga_id):
         raise HTTPException(status_code=404, detail="Mangá não encontrado")
@@ -84,7 +85,10 @@ def criar_capitulo(capitulo: CapituloCreate, db: Session = Depends(get_db), _adm
 def atualizar_capitulo(
     capitulo_id: int, dados: CapituloUpdate, db: Session = Depends(get_db), _admin=Depends(exigir_admin)
 ):
-    """Atualiza número, título e data do capítulo (só administrador). Páginas omitidas são mantidas."""
+    """Atualiza número, título, data e crédito da tradução (só administrador).
+
+    Campos omitidos ficam vazios: envie o capítulo completo. Páginas omitidas são mantidas.
+    """
     capitulo = _capitulo_ou_404(db, capitulo_id)
     _garantir_numero_livre(db, capitulo.manga_id, dados.numero, ignorar_id=capitulo.id)
     return crud_capitulo.update_capitulo(db, capitulo, dados)

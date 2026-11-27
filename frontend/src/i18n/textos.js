@@ -146,6 +146,7 @@ const pt = {
   "leitor.editar": "Editar capítulo",
   "leitor.semPaginas": "Este capítulo ainda não tem páginas cadastradas.",
   "leitor.dica": "Dica: use as setas ← e → do teclado para trocar de capítulo.",
+  "leitor.traducao": "Tradução:",
 
   "busca.rotulo": "Busca rápida",
   "busca.placeholder": "Buscar mangá pelo título...",
@@ -199,6 +200,9 @@ const pt = {
   "cap.numero": "Número *",
   "cap.titulo": "Título",
   "cap.lancamento": "Lançamento",
+  "cap.traducaoPor": "Tradução por",
+  "cap.traducaoUrl": "Link de quem traduziu",
+  "cap.traducaoDica": "Opcional. Aparece no leitor como crédito, com link.",
   "cap.paginas": "Páginas ({n})",
   "cap.paginasDica":
     "Escolha as imagens do computador (ficam na ordem do nome do arquivo: 01, 02, 03...) ou cole links, um por linha. As imagens já enviadas aparecem como /uploads/...: mude as linhas de lugar para reordenar.",
@@ -370,6 +374,7 @@ const en = {
   "leitor.editar": "Edit chapter",
   "leitor.semPaginas": "This chapter has no pages yet.",
   "leitor.dica": "Tip: use the ← and → keys to switch chapters.",
+  "leitor.traducao": "Translation:",
 
   "busca.rotulo": "Quick search",
   "busca.placeholder": "Search manga by title...",
@@ -423,6 +428,9 @@ const en = {
   "cap.numero": "Number *",
   "cap.titulo": "Title",
   "cap.lancamento": "Release date",
+  "cap.traducaoPor": "Translated by",
+  "cap.traducaoUrl": "Translator's link",
+  "cap.traducaoDica": "Optional. Shown in the reader as a credit, with a link.",
   "cap.paginas": "Pages ({n})",
   "cap.paginasDica":
     "Choose images from your computer (ordered by file name: 01, 02, 03...) or paste links, one per line. Already uploaded images show as /uploads/...: move lines around to reorder.",
@@ -594,6 +602,7 @@ const es = {
   "leitor.editar": "Editar capítulo",
   "leitor.semPaginas": "Este capítulo aún no tiene páginas.",
   "leitor.dica": "Consejo: usa las flechas ← y → del teclado para cambiar de capítulo.",
+  "leitor.traducao": "Traducción:",
 
   "busca.rotulo": "Búsqueda rápida",
   "busca.placeholder": "Buscar manga por título...",
@@ -647,6 +656,9 @@ const es = {
   "cap.numero": "Número *",
   "cap.titulo": "Título",
   "cap.lancamento": "Lanzamiento",
+  "cap.traducaoPor": "Traducido por",
+  "cap.traducaoUrl": "Enlace de quien tradujo",
+  "cap.traducaoDica": "Opcional. Aparece en el lector como crédito, con enlace.",
   "cap.paginas": "Páginas ({n})",
   "cap.paginasDica":
     "Elige las imágenes del equipo (quedan en el orden del nombre del archivo: 01, 02, 03...) o pega enlaces, uno por línea. Las imágenes ya subidas aparecen como /uploads/...: cambia las líneas de lugar para reordenar.",

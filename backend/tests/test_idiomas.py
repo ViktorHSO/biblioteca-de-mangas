@@ -193,3 +193,22 @@ def test_banco_antigo_ganha_a_coluna_idioma_original():
         assert conexao.execute(text("SELECT idioma_original FROM mangas")).scalar() == "es"
     with engine.begin() as conexao:
         conexao.execute(text("DROP TABLE mangas"))
+
+
+def test_banco_antigo_ganha_as_colunas_do_credito():
+    from sqlalchemy import inspect, text
+
+    from app.core.migracoes import aplicar_migracoes
+    from app.database import Base, engine
+
+    Base.metadata.drop_all(bind=engine)
+    with engine.begin() as conexao:
+        conexao.execute(text("CREATE TABLE mangas (id INTEGER PRIMARY KEY, titulo VARCHAR(255) NOT NULL)"))
+        conexao.execute(text("CREATE TABLE capitulos (id INTEGER PRIMARY KEY, numero INTEGER NOT NULL)"))
+    aplicar_migracoes(engine)
+    aplicar_migracoes(engine)
+    colunas = {c["name"] for c in inspect(engine).get_columns("capitulos")}
+    assert {"traducao_por", "traducao_url"} <= colunas
+    with engine.begin() as conexao:
+        conexao.execute(text("DROP TABLE capitulos"))
+        conexao.execute(text("DROP TABLE mangas"))

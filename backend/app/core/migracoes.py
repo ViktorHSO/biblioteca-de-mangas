@@ -13,8 +13,24 @@ from sqlalchemy.engine import Engine
 logger = logging.getLogger("biblioteca_mangas")
 
 
+# Colunas opcionais novas: (tabela, coluna, definição SQL). Só são criadas se não existirem.
+COLUNAS_NOVAS = [
+    ("capitulos", "traducao_por", "VARCHAR(100) NULL"),
+    ("capitulos", "traducao_url", "VARCHAR(500) NULL"),
+]
+
+
 def aplicar_migracoes(engine: Engine) -> None:
-    colunas = {coluna["name"] for coluna in inspect(engine).get_columns("mangas")}
+    inspetor = inspect(engine)
+    colunas = {coluna["name"] for coluna in inspetor.get_columns("mangas")}
+    for tabela, coluna, definicao in COLUNAS_NOVAS:
+        if not inspetor.has_table(tabela):
+            continue  # tabela nova: o create_all já a cria com todas as colunas
+        if coluna not in {c["name"] for c in inspetor.get_columns(tabela)}:
+            with engine.begin() as conexao:
+                conexao.execute(text(f"ALTER TABLE {tabela} ADD COLUMN {coluna} {definicao}"))
+            logger.info("Coluna %s.%s criada.", tabela, coluna)
+
     if "idioma_original" not in colunas:
         with engine.begin() as conexao:
             conexao.execute(
